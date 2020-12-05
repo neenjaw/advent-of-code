@@ -33,7 +33,7 @@ FIELD_RULES = [
   ['hcl', ->(v) { v.match(/#[0-9a-f]{6}/) }],
   ['ecl', ->(v) { %w[amb blu brn gry grn hzl oth].any? { |color| color == v } }],
   ['pid', ->(v) { v.match(/^[0-9]{9}$/) }]
-]
+].freeze
 
 def valid_height?(height)
   number = height[0...-2].to_i
