@@ -48,4 +48,4 @@ end
 
 _, acc = change_positions.map { |pos| run(pos) }.find { |reason, _acc| reason == :complete }
 
-puts "Solution 1: #{acc}"
+puts "Solution 2: #{acc}"
