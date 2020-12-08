@@ -23,6 +23,11 @@ defmodule VM do
   end
 
   @spec tick(map(), State.t(), map()) :: {:ok, State.t()} | {:error, String.t(), State.t()}
+  def tick(_program, %State{position: pos, visited: visited} = state, _options)
+      when is_map_key(visited, pos) do
+    {:error, "infinite loop detected", state}
+  end
+
   def tick(program, %State{position: pos} = state, _options) when pos == map_size(program) do
     {:ok, state}
   end
@@ -31,12 +36,8 @@ defmodule VM do
     with {:instruction, {instruction, value}} <- {:instruction, program[pos]},
          {:mutation, instruction} <- {:mutation, mutate_instruction(instruction, state, options)},
          {:next, next_state} <- {:next, handle_instruction(state, instruction, value)},
-         next_state <- %{next_state | visited: Map.put(visited, pos, true)},
-         {:detect_inf_loop, false, _} <-
-           {:detect_inf_loop, not (visited[next_state.position] == nil), next_state} do
+         next_state <- %{next_state | visited: Map.put(visited, pos, true)} do
       tick(program, next_state, options)
-    else
-      {:detect_inf_loop, true, error_state} -> {:error, "infinite loop detected", error_state}
     end
   end
 
