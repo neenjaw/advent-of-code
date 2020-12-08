@@ -30,9 +30,8 @@ defmodule VM do
   def tick(program, %State{position: pos, visited: visited} = state, options) do
     with {:instruction, {instruction, value}} <- {:instruction, program[pos]},
          {:mutation, instruction} <- {:mutation, mutate_instruction(instruction, state, options)},
-         {:update_visited, visited} <- {:update_visited, Map.put(visited, pos, true)},
          {:next, next_state} <- {:next, handle_instruction(state, instruction, value)},
-         {:next, next_state} <- {:next, %{next_state | visited: visited}},
+         next_state <- %{next_state | visited: Map.put(visited, pos, true)},
          {:detect_inf_loop, false, _} <-
            {:detect_inf_loop, not (visited[next_state.position] == nil), next_state} do
       tick(program, next_state, options)
