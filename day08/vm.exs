@@ -22,19 +22,22 @@ defmodule VM do
     tick(program, %State{}, options)
   end
 
-  @spec tick(map(), State.t(), map()) :: {:ok, State.t()} | :error
-  def tick(program, %State{position: pos} = state, options) when pos == map_size(program) do
+  @spec tick(map(), State.t(), map()) :: {:ok, State.t()} | {:error, String.t(), State.t()}
+  def tick(program, %State{position: pos} = state, _options) when pos == map_size(program) do
     {:ok, state}
   end
 
-  def tick(program, %State{position: pos, acc: acc, visited: visited} = state, options) do
+  def tick(program, %State{position: pos, visited: visited} = state, options) do
     with {:instruction, {instruction, value}} <- {:instruction, program[pos]},
          {:mutation, instruction} <- {:mutation, mutate_instruction(instruction, state, options)},
          {:update_visited, visited} <- {:update_visited, Map.put(visited, pos, true)},
          {:next, next_state} <- {:next, handle_instruction(state, instruction, value)},
-         {:detect_inf_loop, false} <-
-           {:detect_inf_loop, not (visited[next_state.position] == nil)} do
+         {:next, next_state} <- {:next, %{next_state | visited: visited}},
+         {:detect_inf_loop, false, _} <-
+           {:detect_inf_loop, not (visited[next_state.position] == nil), next_state} do
       tick(program, next_state, options)
+    else
+      {:detect_inf_loop, true, error_state} -> {:error, "infinite loop detected", error_state}
     end
   end
 
@@ -56,6 +59,7 @@ defmodule VM do
   end
 end
 
+# Get the program from file
 program =
   System.argv()
   |> hd()
@@ -63,9 +67,9 @@ program =
   |> Stream.with_index()
   |> Stream.map(&VM.process_instruction/1)
   |> Enum.into(%{})
-  |> IO.inspect(label: "63")
 
-possible_error_indices =
+# Find a solution where flipping one "jmp"-"nop" instruction causes program to correctly halt
+{:ok, %{acc: acc}} =
   program
   |> Stream.filter(fn
     {_, {instruction, _}} when instruction in ~w[jmp nop] -> true
@@ -73,5 +77,8 @@ possible_error_indices =
   end)
   |> Stream.map(&elem(&1, 0))
   |> Enum.sort()
-
-VM.run(program, %{flip_at: 7}) |> IO.inspect(label: "result")
+  |> Stream.map(fn possible_error_index -> VM.run(program, %{flip_at: possible_error_index}) end)
+  |> Enum.find(fn
+    {:ok, _} -> true
+    _ -> false
+  end)
