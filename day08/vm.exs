@@ -82,3 +82,5 @@ program =
     {:ok, _} -> true
     _ -> false
   end)
+
+"Part 2 Solution: #{acc}" |> IO.puts()

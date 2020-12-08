@@ -113,8 +113,8 @@ defmodule Receiver do
         IO.puts(msg)
         IO.puts("Success after #{count} forks")
 
-      {:fail, msg} ->
-        IO.puts(msg)
+      {:fail, _msg} ->
+        # IO.puts(msg)
         listen(limit - 1, count)
 
       {:err, msg} ->
