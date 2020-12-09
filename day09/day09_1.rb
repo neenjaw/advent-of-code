@@ -1,6 +1,3 @@
-require 'benchmark'
-require 'set'
-
 window_min_size = 25
 numbers = []
 first_not_found = nil
