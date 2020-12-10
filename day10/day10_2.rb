@@ -11,7 +11,10 @@ def traverse(adapters, current_idx, table)
 
   current = adapters[current_idx][0]
   to_search = adapters[current_idx+1..].take_while { |(adapter, idx)| adapter - 3 <= current }
-  table[current_idx] = to_search.sum { |(adapter, idx)| table[idx] ? table[idx] : traverse(adapters, idx, table) }
+
+  table[current_idx] = to_search.sum do |(adapter, idx)|
+    table[idx] ? table[idx] : traverse(adapters, idx, table)
+  end
 end
 
-p traverse(adapters, 0, {})
+p "Solution: #{traverse(adapters, 0, {})}"
