@@ -1,3 +1,5 @@
+'use strict'
+
 const fs = require('fs')
 const { argv } = require('process')
 
@@ -9,10 +11,9 @@ const layout = input.split('\n').map((line) => line.split(''))
 const OCCUPIED = '#'
 const EMPTY = 'L'
 const FLOOR = '.'
+const LIMIT = 5
 
-// console.log(layout)
-
-const mutations = [
+const DIRECTIONS = Object.freeze([
   [1, -1],
   [1, 0],
   [1, 1],
@@ -21,20 +22,17 @@ const mutations = [
   [-1, -1],
   [-1, 0],
   [-1, 1],
-]
+])
 
 function processRound(layout) {
-  // if a seat is empty and there are no occupied seats adjacent to it, becomes occupied
-  // if a seat is occupied and foure or more seats adjacent to it are accupied, seat becomes empty
-  //  otherwise none
-  let changes = 0
-  const changed = layout.map((row, y) => {
+  let changeCount = 0
+  const changedLayout = layout.map((row, y) => {
     return row.map((seat, x) => {
       if (seat === FLOOR) {
         return FLOOR
       }
 
-      const surroundingCount = mutations.reduce((acc, [dy, dx]) => {
+      const surroundingCount = DIRECTIONS.reduce((acc, [dy, dx]) => {
         if (layout[y + dy] === undefined) {
           return acc
         }
@@ -43,10 +41,12 @@ function processRound(layout) {
       }, 0)
 
       if (seat === EMPTY && surroundingCount === 0) {
-        changes += 1
+        // if the seat is empty and there are no seats in sight
+        changeCount += 1
         return OCCUPIED
-      } else if (seat === OCCUPIED && surroundingCount >= 5) {
-        changes += 1
+      } else if (seat === OCCUPIED && surroundingCount >= LIMIT) {
+        // if the seat is occupied and the can see greater than the limit
+        changeCount += 1
         return EMPTY
       } else {
         return seat
@@ -54,18 +54,13 @@ function processRound(layout) {
     })
   })
 
-  // console.log(printLayout(changed))
-  return [changed, changes]
+  return [changedLayout, changeCount]
 }
 
 function run(layout) {
-  let round = 0
   let currentLayout = layout
   let done = false
   while (!done) {
-    round += 1
-    console.log(`round: ${round}`)
-
     const [processed, changes] = processRound(currentLayout)
 
     if (changes === 0) {
@@ -92,7 +87,7 @@ function printLayout(layout) {
 }
 
 function canSeeSeat(layout, y, x, dy, dx) {
-  sawChair = false
+  const sawChair = false
 
   while (!sawChair) {
     y += dy
