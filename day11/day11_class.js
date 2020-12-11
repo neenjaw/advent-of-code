@@ -13,4 +13,10 @@ const input = fileRead.trimEnd()
 
 const layout = input.split('\n').map((line) => line.split(''))
 
-console.log(new SeatingArrangement(layout, {}).settle().occupiedSeats)
+const start = new Date().getTime()
+const occupied = new SeatingArrangement(layout, {}).settle().occupiedSeats
+const end = new Date().getTime()
+
+const delta = end - start
+
+console.log(`${occupied} computed in ${delta}ms`)
