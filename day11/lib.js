@@ -95,9 +95,7 @@ function processRound(layout, seatComparator, limit) {
 }
 
 function canSeeOccupiedSeat(layout, y, x, dy, dx) {
-  const sawChair = false
-
-  while (!sawChair) {
+  while (true) {
     y += dy
     x += dx
 
