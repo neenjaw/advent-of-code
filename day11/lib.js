@@ -1,7 +1,6 @@
 const OCCUPIED = '#'
 const EMPTY = 'L'
 const FLOOR = '.'
-const LIMIT = 5
 
 const DIRECTIONS = Object.freeze([
   [1, -1],
@@ -13,39 +12,6 @@ const DIRECTIONS = Object.freeze([
   [-1, 0],
   [-1, 1],
 ])
-
-function processRound(layout, seatComparator) {
-  let changeCount = 0
-  const changedLayout = layout.map((row, y) => {
-    return row.map((seat, x) => {
-      if (seat === FLOOR) {
-        return FLOOR
-      }
-
-      const surroundingCount = DIRECTIONS.reduce((acc, [dy, dx]) => {
-        if (layout[y + dy] === undefined) {
-          return acc
-        }
-
-        return acc + (seatComparator(layout, y, x, dy, dx) ? 1 : 0)
-      }, 0)
-
-      if (seat === EMPTY && surroundingCount === 0) {
-        // if the seat is empty and there are no seats in sight
-        changeCount += 1
-        return OCCUPIED
-      } else if (seat === OCCUPIED && surroundingCount >= LIMIT) {
-        // if the seat is occupied and the can see greater than the limit
-        changeCount += 1
-        return EMPTY
-      } else {
-        return seat
-      }
-    })
-  })
-
-  return [changedLayout, changeCount]
-}
 
 class SeatingArrangement {
   constructor(
@@ -80,7 +46,8 @@ class SeatingArrangement {
 
       const [processed, changes] = processRound(
         currentLayout,
-        this.seatComparator
+        this.seatComparator,
+        this.limit
       )
 
       if (changes === 0) {
@@ -92,6 +59,39 @@ class SeatingArrangement {
     this.layout = currentLayout
     return this
   }
+}
+
+function processRound(layout, seatComparator, limit) {
+  let changeCount = 0
+  const changedLayout = layout.map((row, y) => {
+    return row.map((seat, x) => {
+      if (seat === FLOOR) {
+        return FLOOR
+      }
+
+      const surroundingCount = DIRECTIONS.reduce((acc, [dy, dx]) => {
+        if (layout[y + dy] === undefined) {
+          return acc
+        }
+
+        return acc + (seatComparator(layout, y, x, dy, dx) ? 1 : 0)
+      }, 0)
+
+      if (seat === EMPTY && surroundingCount === 0) {
+        // if the seat is empty and there are no seats in sight
+        changeCount += 1
+        return OCCUPIED
+      } else if (seat === OCCUPIED && surroundingCount >= limit) {
+        // if the seat is occupied and the can see greater than the limit
+        changeCount += 1
+        return EMPTY
+      } else {
+        return seat
+      }
+    })
+  })
+
+  return [changedLayout, changeCount]
 }
 
 function canSeeOccupiedSeat(layout, y, x, dy, dx) {
