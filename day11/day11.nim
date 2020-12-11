@@ -22,6 +22,7 @@ const directions = [
   (-1, 1)
 ]
 
+# For part 1
 proc lookAround(layout: seq[seq[char]], y: int, x: int): int =
   var count: int = 0
 
@@ -34,6 +35,7 @@ proc lookAround(layout: seq[seq[char]], y: int, x: int): int =
 
   return count
 
+# For part 2
 proc lookAtVector(layout: seq[seq[char]], y: int, x: int): int =
   var count: int = 0
 
@@ -91,23 +93,14 @@ var input = readFile(filename)
 
 
 var settled = false
-var round = 0
 let startTime = cpuTime()
 while not settled:
-  round += 1
   let (changes_present, dance_result) = dance(input)
   input = dance_result
   if not changes_present:
     settled = true
 let endTime = cpuTime() - startTime
 
-
-
-# echo strLayout(input)
+echo strLayout(input)
 echo occupied(input)
 echo endTime
-
-# echo strLayout(round1)
-# echo occupied(round1)
-
-# echo strLayout(input)
