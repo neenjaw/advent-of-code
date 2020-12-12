@@ -39,6 +39,22 @@ const distance = routingInformation.reduce(
         waypointX -= amount
         break
 
+      /**
+       * Alternate using vector math
+      case 'L':
+      case 'R':
+        const rad = ((amount * Math.PI) / 180) * (direction === 'R' ? -1 : 1)
+        const newWaypointX = Math.round(
+          waypointX * Math.cos(rad) - waypointY * Math.sin(rad)
+        )
+        const newWaypointY = Math.round(
+          waypointX * Math.sin(rad) + waypointY * Math.cos(rad)
+        )
+        waypointY = newWaypointY
+        waypointX = newWaypointX
+        break
+       */
+
       case 'L':
         const left_turns = (amount % 360) / 90
         for (let index = 0; index < left_turns; index++) {
