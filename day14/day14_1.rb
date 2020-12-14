@@ -1,27 +1,8 @@
 def handle_mask(mask_instructions)
   mask_pattern = mask_instructions.chomp.partition(' = ').last
 
-  overwrite_mask = ''
-  write_mask = ''
-
-  mask_pattern.chars.each do |c|
-    case c
-    when 'X'
-      overwrite_mask << '1'
-      write_mask << '0'
-    when '1'
-      overwrite_mask << '0'
-      write_mask << c
-    when '0'
-      overwrite_mask << '0'
-      write_mask << c
-    else
-      raise ArgumentError, "unknown bit #{c}"
-    end
-  end
-
-  overwrite_mask = overwrite_mask.to_i(2)
-  write_mask = write_mask.to_i(2)
+  overwrite_mask = mask_pattern.tr('X10', '100').to_i(2)
+  write_mask = mask_pattern.tr('X', '0').to_i(2)
 
   [overwrite_mask, write_mask]
 end
@@ -42,5 +23,5 @@ ARGF.readlines.each_with_object(acc) do |line, acc|
   handle_mem(acc[:mem], line, acc[:overwrite_mask], acc[:write_mask]) if line.start_with?('mem')
 end
 
-# puts acc.inspect
+# acc[:mem].keys.sort.each { |key| puts "#{key}: #{acc[:mem][key]}" }
 puts acc[:mem].values.sum
