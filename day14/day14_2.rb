@@ -1,15 +1,16 @@
+require 'benchmark'
+
 def v2_generate_addrs(base_addr, pattern)
-  reversed_pattern = pattern.reverse
-  reversed_base_addr = base_addr.to_s(2).reverse
+  base_addr = base_addr.to_s(2).rjust(36, '0')
 
   addrs = ['']
 
-  reversed_pattern.chars.each_with_index do |c, idx|
+  pattern.chars.each_with_index do |c, idx|
     case c
     when '1'
       addrs.map { |mask| mask << c }
     when '0'
-      addrs.map { |mask| mask << (reversed_base_addr[idx] || c) }
+      addrs.map { |mask| mask << (base_addr[idx] || c) }
     when 'X'
       addrs = addrs.each_with_object([]) do |mask, acc|
         acc << (mask.clone << '1')
@@ -20,7 +21,7 @@ def v2_generate_addrs(base_addr, pattern)
     end
   end
 
-  addrs.map { |mask| mask.reverse.to_i(2) }
+  addrs.map { |mask| mask.to_i(2) }
 end
 
 def v2_handle_mem(mem, mem_instruction, pattern)
@@ -33,11 +34,17 @@ def v2_handle_mem(mem, mem_instruction, pattern)
   end
 end
 
-acc = { mem: {}, pattern: nil }
-ARGF.readlines.each_with_object(acc) do |line, acc|
-  acc[:pattern] = line.chomp.partition(' = ').last if line.start_with?('mask')
-  v2_handle_mem(acc[:mem], line, acc[:pattern]) if line.start_with?('mem')
-end
 
-# puts acc.inspect
-puts acc[:mem].values.sum
+Benchmark.bmbm do |x|
+  input = ARGF.readlines
+  x.report('part 2') do
+    acc = { mem: {}, pattern: nil }
+    input.each_with_object(acc) do |line, acc|
+      acc[:pattern] = line.chomp.partition(' = ').last if line.start_with?('mask')
+      v2_handle_mem(acc[:mem], line, acc[:pattern]) if line.start_with?('mem')
+    end
+
+    # puts acc.inspect
+    puts acc[:mem].values.sum
+  end
+end
