@@ -87,7 +87,7 @@ departure_product =
   column_names
     .zip(my_ticket)
     .filter { |(name, n)| name.start_with?("depart")}
-    .map { |(_, n)| n }
+    .map(&:last)
     .reduce(&:*)
 
 puts "Part 2: #{departure_product}"
