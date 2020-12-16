@@ -43,7 +43,7 @@ nearby_tickets = nearby_tickets.split("\n").drop(1)
 
 all_nearby_numbers = nearby_tickets.flat_map { |line| line.split(',') }.map(&:to_i)
 all_nearby_invalid = all_nearby_numbers.reject { |number| notes.any? { |note| note.include?(number) } }
-all_invalid_sum  = all_nearby_invalid.sum
+all_invalid_sum = all_nearby_invalid.sum
 
 puts "Part 1: #{all_invalid_sum}"
 
@@ -75,10 +75,8 @@ column_names =
     .sort_by { |p, _i| p.size }
     .tap do |sorted|
       sorted.each.with_index do |(possibilities, place), i|
-        if possibilities.size == 1
-          sorted[i + 1..].each.with_index(i+1) do |(p, p_place), j|
-            sorted[j] = [p - possibilities, p_place]
-          end
+        sorted[i + 1..].each.with_index(i+1) do |(p, p_place), j|
+          sorted[j] = [p - possibilities, p_place]
         end
       end
     end
