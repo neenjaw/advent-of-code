@@ -172,7 +172,7 @@ input = File.read(ARGV[0]).chomp.split("\n").map{ |row| row.split('') }
 grid = SpatialGrid.new
 input.each.with_index do |row, y|
   row.each.with_index do |cube, x|
-    grid.put(x: x, y: y, z: 0, cube: Cube.from_char(input[y][x]))
+    grid.put(x: x, y: y, z: 0, cube: Cube.from_char(cube))
   end
 end
 

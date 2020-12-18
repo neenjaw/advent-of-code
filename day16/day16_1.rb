@@ -67,32 +67,32 @@ end
 
 column_names =
   name_possibilities
-    .each.with_index
-    .sort_by { |p, _i| p.size }
-    .tap do |sorted|
-      # sorted contains an array of tuples, [Set[], position]
-      # The set is the set of possible names, the position is the original
-      # position on the ticket where the name appears.
+  .each.with_index
+  .sort_by { |p, _i| p.size }
+  .tap do |sorted|
+    # sorted contains an array of tuples, [Set[], position]
+    # The set is the set of possible names, the position is the original
+    # position on the ticket where the name appears.
 
-      # Due to the nature of the problem, one ticket column field has one possibility,
-      # the next has 2, increasing with each column up to n possibilities. So we sorted
-      # the possibilities by number of possibilities to progressive perform a set difference
-      sorted.each.with_index do |(possibilities, _place), i|
-        # for each set of possibilities forward, remove the current possibility
-        next_i = i + 1
-        sorted[next_i..].each.with_index(next_i) do |(p, _p_place), j|
-          sorted[j][0] = p - possibilities
-        end
+    # Due to the nature of the problem, one ticket column field has one possibility,
+    # the next has 2, increasing with each column up to n possibilities. So we sorted
+    # the possibilities by number of possibilities to progressive perform a set difference
+    sorted.each.with_index do |(possibilities, _place), i|
+      # for each set of possibilities forward, remove the current possibility
+      next_i = i + 1
+      sorted[next_i..].each.with_index(next_i) do |(p, _p_place), j|
+        sorted[j][0] = p - possibilities
       end
     end
-    .sort_by(&:last)
-    .map { |p, _i| p.to_a.first }
+  end
+  .sort_by(&:last)
+  .map { |p, _i| p.to_a.first }
 
 departure_product =
   column_names
-    .zip(my_ticket)
-    .filter { |(name, _n)| name.start_with?("depart") }
-    .map(&:last)
-    .reduce(&:*)
+  .zip(my_ticket)
+  .filter { |(name, _n)| name.start_with?("depart") }
+  .map(&:last)
+  .reduce(&:*)
 
 puts "Part 2: #{departure_product}"
