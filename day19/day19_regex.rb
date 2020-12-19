@@ -25,17 +25,17 @@ end
 
 rule_data, message_data = File.read(ARGV[0]).chomp.split("\n\n")
 
-rules = {}
-rule_data.split("\n").each do |s|
-  idx, premises = s.split(': ')
+rules =
+  rule_data.split("\n").each_with_object({}) do |str_rule, memo|
+    idx, premises = str_rule.split(': ')
 
-  rules[idx.to_i] =
-    if premises.start_with?('"')
-      premises[1]
-    else
-      premises.split(' | ').map { |conjunction| conjunction.split(' ').map(&:to_i) }
-    end
-end
+    memo[idx.to_i] =
+      if premises.start_with?('"')
+        premises[1]
+      else
+        premises.split(' | ').map { |conjunction| conjunction.split(' ').map(&:to_i) }
+      end
+  end
 
 zero_rule_regex = Regexp.new("^#{build(rules)}$")
 puts _matching_count = message_data.split("\n").count { |msg| zero_rule_regex.match?(msg) }
