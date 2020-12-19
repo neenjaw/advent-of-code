@@ -29,6 +29,13 @@ const PRECEDENCE = {
   [MULTIPLICATION]: 2,
 }
 
+function getOperatorPrecedence(op) {
+  return PRECEDENCE[op]
+}
+
+/**
+ * @param {string} expression
+ */
 function evaluateExpression(expression) {
   const tokens = expression.split('').filter((char) => char !== ' ')
   return evaluateTokens(tokens)
@@ -58,7 +65,8 @@ function convertToRPN(tokens) {
     } else if (OPERATORS.includes(token)) {
       while (
         !operatorStack.isEmpty() &&
-        PRECEDENCE[operatorStack.peek()] > PRECEDENCE[token]
+        getOperatorPrecedence(operatorStack.peek()) >
+          getOperatorPrecedence(token)
       ) {
         outputStack.push(operatorStack.pop())
       }
