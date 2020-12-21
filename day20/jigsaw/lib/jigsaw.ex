@@ -11,7 +11,14 @@ defmodule Jigsaw do
     Image.Tile.Store.start_link()
     Image.Tile.Store.drop()
 
-    File.read!(file_path)
-    |> Image.from_file()
+    image_rows =
+      file_path
+      |> File.read!()
+      |> Image.from_file()
+      |> Image.Scaffold.scaffold_to_image_rows()
+
+    pattern = Image.Pattern.seamonster_rows() |> Image.Pattern.compile_pattern()
+
+    Image.Pattern.search_image_for_pattern(image_rows, pattern)
   end
 end

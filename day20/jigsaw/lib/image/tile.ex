@@ -52,13 +52,13 @@ defmodule Image.Tile do
     )
   end
 
-  @rotations [0, 90, 180, 270]
-  @vflip [false, true]
-  @hflip [false, true]
+  #
+  #
+  #
 
   @spec generate_tile_variations(__MODULE__.t()) :: list(__MODULE__.t())
   def generate_tile_variations(%__MODULE__{orientation: o, vflip: v, hflip: h} = tile) do
-    for {rotation, vflip, hflip} <- generate_attr_combinations() do
+    for {rotation, vflip, hflip} <- Image.Utility.generate_combinations() do
       case {rotation, vflip, hflip} do
         {^o, ^v, ^h} ->
           tile
@@ -76,6 +76,10 @@ defmodule Image.Tile do
       end
     end
   end
+
+  #
+  #
+  #
 
   @spec rotate_tile_data(list(list(String.t())), non_neg_integer()) :: list(list(String.t()))
   def rotate_tile_data(tile_data, turns \\ 0)
@@ -105,11 +109,6 @@ defmodule Image.Tile do
     Enum.map(tile_data, &Enum.reverse/1)
   end
 
-  @spec to_key(__MODULE__.t()) :: {integer(), non_neg_integer(), boolean(), boolean()}
-  def to_key(%__MODULE__{} = tile) do
-    {tile.number, tile.orientation, tile.vflip, tile.hflip}
-  end
-
   defp transpose([]), do: []
   defp transpose([[] | _]), do: []
 
@@ -117,8 +116,13 @@ defmodule Image.Tile do
     [Enum.map(a, &hd/1) | transpose(Enum.map(a, &tl/1))]
   end
 
-  defp generate_attr_combinations() do
-    for rotation <- @rotations, vflip <- @vflip, hflip <- @hflip, do: {rotation, vflip, hflip}
+  #
+  #
+  #
+
+  @spec to_key(__MODULE__.t()) :: {integer(), non_neg_integer(), boolean(), boolean()}
+  def to_key(%__MODULE__{} = tile) do
+    {tile.number, tile.orientation, tile.vflip, tile.hflip}
   end
 
   defp number_from_title(title) do

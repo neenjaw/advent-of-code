@@ -21,6 +21,10 @@ defmodule Image do
       |> Enum.find_value(:no_solution, &search(adjacency_table, image_dimension, &1))
   end
 
+  #
+  #
+  #
+
   def find_potentials(tiles) do
     Enum.reduce(tiles, %{}, fn tile, memo ->
       sides_to_check = [
@@ -43,6 +47,10 @@ defmodule Image do
     end)
   end
 
+  #
+  #
+  #
+
   def find_starting_points(potential_adjacent) do
     potential_adjacent
     |> Enum.filter(fn
@@ -56,6 +64,10 @@ defmodule Image do
         false
     end)
   end
+
+  #
+  #
+  #
 
   def search(table, dimension, coord \\ nil, point, image \\ nil)
 
@@ -118,6 +130,10 @@ defmodule Image do
       end
     end)
   end
+
+  #
+  #
+  #
 
   def match_adjacent(image, {y, x}, {_, _, _, _} = tile, opts \\ []) do
     debug = Keyword.get(opts, :debug, false)

@@ -21,4 +21,26 @@ defmodule Image.Scaffold do
       end)
     end)
   end
+
+  def scaffold_to_image_rows(%__MODULE__{} = scaffold) do
+    cond do
+      not complete?(scaffold) ->
+        raise ArgumentError, "unable to populate unfinished scaffold"
+
+      true ->
+        scaffold.grid
+        |> Map.values()
+        |> Enum.map(&Map.values/1)
+        |> Enum.flat_map(fn row ->
+          row
+          |> Enum.map(fn key ->
+            {:ok, tile} = Image.Tile.Store.get(key)
+            tile.core
+          end)
+          |> Enum.zip()
+          |> Enum.map(&(&1 |> Tuple.to_list() |> Enum.concat()))
+        end)
+        |> Enum.map(&Enum.join/1)
+    end
+  end
 end
