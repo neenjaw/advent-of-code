@@ -1,0 +1,178 @@
+# Jigsaw
+
+```elixir
+%Image.Scaffold{
+  dimension: 12,
+  grid: %{
+    0 => %{
+      0 => {1543, 0, false, false},
+      1 => {2707, 90, false, true},
+      2 => {3467, 0, false, true},
+      3 => {2053, 0, false, false},
+      4 => {2099, 90, false, true},
+      5 => {2269, 0, false, false},
+      6 => {3221, 90, false, false},
+      7 => {2663, 90, false, false},
+      8 => {1021, 90, true, true},
+      9 => {1973, 0, false, false},
+      10 => {1297, 0, true, false},
+      11 => {1213, 0, false, false}
+    },
+    1 => %{
+      0 => {1871, 90, true, true},
+      1 => {2621, 90, false, false},
+      2 => {3413, 0, false, true},
+      3 => {3067, 90, true, true},
+      4 => {1237, 90, false, true},
+      5 => {1609, 90, true, true},
+      6 => {2399, 0, false, true},
+      7 => {1583, 90, false, true},
+      8 => {2791, 90, true, false},
+      9 => {2887, 0, false, true},
+      10 => {1499, 0, true, false},
+      11 => {3373, 0, false, false}
+    },
+    2 => %{
+      0 => {1429, 0, true, false},
+      1 => {2351, 0, false, false},
+      2 => {1949, 90, false, true},
+      3 => {3617, 90, false, false},
+      4 => {1867, 90, true, true},
+      5 => {1231, 0, false, true},
+      6 => {1093, 0, false, true},
+      7 => {2957, 0, true, false},
+      8 => {1847, 90, false, false},
+      9 => {2393, 90, true, false},
+      10 => {1747, 0, true, false},
+      11 => {1039, 0, true, false}
+    },
+    3 => %{
+      0 => {1663, 90, false, false},
+      1 => {2039, 90, true, true},
+      2 => {3371, 0, false, true},
+      3 => {3557, 90, true, true},
+      4 => {2609, 0, false, true},
+      5 => {1489, 90, true, false},
+      6 => {3533, 0, false, false},
+      7 => {1933, 0, false, true},
+      8 => {3347, 0, false, false},
+      9 => {3163, 0, true, false},
+      10 => {3229, 90, false, false},
+      11 => {1621, 0, false, false}
+    },
+    4 => %{
+      0 => {3001, 90, false, false},
+      1 => {3041, 90, true, true},
+      2 => {3803, 90, true, false},
+      3 => {1861, 90, true, true},
+      4 => {2687, 0, false, true},
+      5 => {1619, 90, true, true},
+      6 => {2143, 90, false, true},
+      7 => {1901, 0, true, false},
+      8 => {1637, 90, true, false},
+      9 => {3877, 0, false, false},
+      10 => {3541, 0, false, false},
+      11 => {2803, 90, true, true}
+    },
+    5 => %{
+      0 => {3217, 90, true, false},
+      1 => {1721, 90, false, true},
+      2 => {1439, 90, true, false},
+      3 => {2953, 90, false, false},
+      4 => {2417, 0, false, false},
+      5 => {1319, 0, true, false},
+      6 => {1831, 90, false, true},
+      7 => {2309, 90, true, false},
+      8 => {3343, 90, true, true},
+      9 => {2237, 90, false, false},
+      10 => {1931, 90, false, true},
+      11 => {1601, 0, false, true}
+    },
+    6 => %{
+      0 => {2729, 90, true, true},
+      1 => {1879, 0, true, false},
+      2 => {2161, 0, true, false},
+      3 => {3929, 90, false, true},
+      4 => {2333, 0, true, false},
+      5 => {3727, 90, true, false},
+      6 => {1109, 90, true, false},
+      7 => {3011, 90, false, false},
+      8 => {2341, 0, false, true},
+      9 => {3779, 90, true, false},
+      10 => {1741, 90, false, false},
+      11 => {3137, 90, false, false}
+    },
+    7 => %{
+      0 => {3181, 0, false, false},
+      1 => {3697, 90, false, true},
+      2 => {2671, 0, true, false},
+      3 => {2833, 0, false, true},
+      4 => {1657, 0, false, false},
+      5 => {1249, 90, false, false},
+      6 => {3637, 0, false, true},
+      7 => {3121, 90, true, true},
+      8 => {3301, 0, true, false},
+      9 => {3271, 90, false, false},
+      10 => {2027, 90, true, false},
+      11 => {1627, 0, false, false}
+    },
+    8 => %{
+      0 => {1187, 0, false, true},
+      1 => {3457, 0, false, false},
+      2 => {1993, 90, true, true},
+      3 => {2441, 0, true, false},
+      4 => {2087, 90, true, false},
+      5 => {1129, 90, true, true},
+      6 => {1321, 0, true, false},
+      7 => {2081, 0, true, false},
+      8 => {3257, 0, false, true},
+      9 => {1571, 90, false, false},
+      10 => {3529, 0, true, false},
+      11 => {3671, 0, true, false}
+    },
+    9 => %{
+      0 => {3517, 90, false, true},
+      1 => {1361, 90, true, false},
+      2 => {2857, 90, false, false},
+      3 => {2719, 90, false, true},
+      4 => {3967, 0, true, false},
+      5 => {3677, 0, false, false},
+      6 => {2549, 90, true, false},
+      7 => {2381, 90, false, false},
+      8 => {1907, 0, false, true},
+      9 => {1787, 0, false, true},
+      10 => {2699, 0, false, false},
+      11 => {2389, 90, true, true}
+    },
+    10 => %{
+      0 => {2003, 0, false, false},
+      1 => {1327, 0, false, true},
+      2 => {2467, 0, true, false},
+      3 => {3391, 0, true, false},
+      4 => {1889, 90, false, true},
+      5 => {1019, 90, true, true},
+      6 => {2423, 90, true, false},
+      7 => {1279, 0, true, false},
+      8 => {2251, 90, false, true},
+      9 => {3049, 90, false, false},
+      10 => {1153, 90, false, true},
+      11 => {1009, 0, false, false}
+    },
+    11 => %{
+      0 => {1117, 90, true, true},
+      1 => {1559, 0, false, false},
+      2 => {2617, 0, false, true},
+      3 => {3323, 90, true, false},
+      4 => {1531, 0, true, false},
+      5 => {2861, 90, true, false},
+      6 => {2797, 90, true, false},
+      7 => {3673, 0, false, false},
+      8 => {2203, 90, true, true},
+      9 => {3931, 90, false, false},
+      10 => {2657, 90, true, true},
+      11 => {1291, 90, false, true}
+    }
+  }
+}
+
+```
