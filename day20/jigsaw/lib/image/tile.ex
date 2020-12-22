@@ -58,62 +58,16 @@ defmodule Image.Tile do
 
   @spec generate_tile_variations(__MODULE__.t()) :: list(__MODULE__.t())
   def generate_tile_variations(%__MODULE__{orientation: o, vflip: v, hflip: h} = tile) do
-    for {rotation, vflip, hflip} <- Image.Utility.generate_combinations() do
-      case {rotation, vflip, hflip} do
+    for manipulation <- Image.Utility.generate_combinations() do
+      case manipulation do
         {^o, ^v, ^h} ->
           tile
 
-        _ ->
-          turns = rotation |> div(90) |> rem(4)
-
-          manipulated_data =
-            tile.data
-            |> rotate_tile_data(turns)
-            |> vertical_flip_tile_data(vflip)
-            |> horizontal_flip_tile_data(hflip)
-
+        {rotation, vflip, hflip} ->
+          manipulated_data = Image.Utility.manipulate_image(tile.data, {rotation, vflip, hflip})
           make(tile.number, manipulated_data, rotation, vflip, hflip)
       end
     end
-  end
-
-  #
-  #
-  #
-
-  @spec rotate_tile_data(list(list(String.t())), non_neg_integer()) :: list(list(String.t()))
-  def rotate_tile_data(tile_data, turns \\ 0)
-
-  def rotate_tile_data(tile_data, 0), do: tile_data
-
-  def rotate_tile_data(tile_data, turns) do
-    rotated =
-      tile_data
-      |> Enum.map(&Enum.reverse/1)
-      |> transpose()
-
-    rotate_tile_data(rotated, turns - 1)
-  end
-
-  @spec vertical_flip_tile_data(list(list(String.t())), boolean()) :: list(list(String.t()))
-  def vertical_flip_tile_data(tile_data, false), do: tile_data
-
-  def vertical_flip_tile_data(tile_data, true) do
-    Enum.reverse(tile_data)
-  end
-
-  @spec horizontal_flip_tile_data(list(list(String.t())), boolean()) :: list(list(String.t()))
-  def horizontal_flip_tile_data(tile_data, false), do: tile_data
-
-  def horizontal_flip_tile_data(tile_data, true) do
-    Enum.map(tile_data, &Enum.reverse/1)
-  end
-
-  defp transpose([]), do: []
-  defp transpose([[] | _]), do: []
-
-  defp transpose(a) do
-    [Enum.map(a, &hd/1) | transpose(Enum.map(a, &tl/1))]
   end
 
   #
