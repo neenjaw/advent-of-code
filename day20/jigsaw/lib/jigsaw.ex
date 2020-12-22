@@ -19,6 +19,6 @@ defmodule Jigsaw do
 
     pattern = Image.Pattern.seamonster_rows() |> Image.Pattern.compile_pattern()
 
-    Image.Pattern.search_image_for_pattern(image_rows, pattern)
+    Image.Pattern.search_and_overwrite_pattern(image_rows, pattern)
   end
 end

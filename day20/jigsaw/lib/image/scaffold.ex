@@ -40,7 +40,6 @@ defmodule Image.Scaffold do
           |> Enum.zip()
           |> Enum.map(&(&1 |> Tuple.to_list() |> Enum.concat()))
         end)
-        |> Enum.map(&Enum.join/1)
     end
   end
 end
