@@ -15,7 +15,7 @@ defmodule Image do
 
     adjacency_table = find_potentials(tile_variations)
 
-    image_scaffold =
+    _image_scaffold =
       adjacency_table
       |> find_starting_points()
       |> Enum.find_value(:no_solution, &search(adjacency_table, image_dimension, &1))
