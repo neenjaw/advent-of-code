@@ -46,6 +46,13 @@ defmodule Nibbler do
     e in RuntimeError -> {:error, e}
   end
 
+  def get_tree({hex, _}) do
+    hex
+    |> convert()
+    |> parse_to_packets()
+    |> elem(0)
+  end
+
   @spec parse_to_packets(encoded :: bitstring) :: [packet()]
   def parse_to_packets(encoded, limit \\ nil)
 
@@ -170,3 +177,77 @@ inputs = [
 inputs
 |> Nibbler.check_inputs()
 |> IO.inspect(label: "finish")
+
+defmodule Adder do
+  def compute({:literal, _, _, value}), do: value
+
+  def compute({:operation, _, type, _, sub_packets}) do
+    sub_computes = sub_packets |> Enum.map(&compute/1)
+
+    case type do
+      0 ->
+        sub_computes |> Enum.sum()
+
+      1 ->
+        sub_computes |> Enum.reduce(&(&1 * &2))
+
+      2 ->
+        sub_computes |> Enum.min()
+
+      3 ->
+        sub_computes |> Enum.max()
+
+      5 ->
+        [first, second | _] = sub_computes
+
+        if first > second do
+          1
+        else
+          0
+        end
+
+      6 ->
+        [first, second | _] = sub_computes
+
+        if first < second do
+          1
+        else
+          0
+        end
+
+      7 ->
+        [second, first | _] = sub_computes
+
+        if first === second do
+          1
+        else
+          0
+        end
+    end
+  end
+end
+
+inputs
+|> List.last()
+|> Nibbler.get_tree()
+|> hd()
+|> Adder.compute()
+|> IO.inspect(label: "235")
+
+~w[
+  C200B40A82
+  04005AC33890
+  880086C3E88112
+  CE00C43D881120
+  D8005AC2A8F0
+  F600BC2D8F
+  9C005AC2F8F0
+  9C0141080250320F1802104A08
+]
+|> Enum.map(fn x ->
+  {x, :unknown}
+  |> Nibbler.get_tree()
+  |> hd()
+  |> Adder.compute()
+end)
+|> IO.inspect(label: "248")
