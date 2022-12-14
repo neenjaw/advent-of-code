@@ -12,28 +12,24 @@ defmodule Solution do
   def to_map(contents) do
     contents
     |> String.split(~r{\n}, trim: true)
-    |> Enum.map(fn line ->
+    |> Enum.flat_map(fn line ->
       line
       |> String.split(~r{ -> }, trim: true)
       |> Enum.map(fn coord ->
-        [x, y] =
-          coord
-          |> String.split(~r{,}, trim: true)
-          |> Enum.map(&String.to_integer/1)
-
-        {x, y}
+        coord
+        |> String.split(~r{,}, trim: true)
+        |> Enum.map(&String.to_integer/1)
+        |> List.to_tuple()
       end)
       |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.map(fn
+      |> Enum.flat_map(fn
         [{x, y1}, {x, y2}] ->
           for y <- y1..y2, do: {{x, y}, @rock}
 
         [{x1, y}, {x2, y}] ->
           for x <- x1..x2, do: {{x, y}, @rock}
       end)
-      |> List.flatten()
     end)
-    |> List.flatten()
     |> Enum.into(%{})
   end
 
