@@ -27,20 +27,17 @@ defmodule Solution do
     %{
       s_rule: fn x ->
         diff = range - abs(target - sy)
-        target in (sy - range)..(sy + range) and x in (sx - diff)..(sx + diff)
+
+        sy - range <= target and target <= sy + range and sx - diff <= x and x <= sx + diff
       end,
       b_rule: fn x -> by != target or x != bx end,
       sx_rule: fn x, y ->
         diff = range - abs(y - sy)
-        y in (sy - range)..(sy + range) and x in (sx - diff)..(sx + diff)
+        sy - range <= y and y <= sy + range and sx - diff <= x and x <= sx + diff
       end,
       skip_fn: fn x, y ->
         diff = range - abs(y - sy)
-
-        cond do
-          x in (sx - diff)..(sx + diff) -> sx + diff + 1
-          true -> :na
-        end
+        sx + diff + 1
       end,
       min_x: sx - range,
       max_x: sx + range
@@ -55,12 +52,9 @@ defmodule Solution do
     min_x = Enum.min_by(rules, &Map.get(&1, :min_x)).min_x
     max_x = Enum.max_by(rules, &Map.get(&1, :max_x)).max_x
 
-    for x <- min_x..max_x,
-        Enum.any?(rules, & &1.s_rule.(x)),
-        Enum.all?(rules, & &1.b_rule.(x)) do
-      x
-    end
-    |> Enum.count()
+    Enum.count(min_x..max_x, fn x ->
+      Enum.any?(rules, & &1.s_rule.(x)) and Enum.all?(rules, & &1.b_rule.(x))
+    end)
     |> then(&(&1 - adj))
   end
 
@@ -70,10 +64,10 @@ defmodule Solution do
 
   def trace(rules, bounds, x, y) do
     cond do
-      x not in bounds ->
+      x > bounds.last ->
         trace(rules, bounds, bounds.first, y + 1)
 
-      y not in bounds ->
+      y > bounds.last ->
         {:out_of_grid, x, y}
 
       true ->
