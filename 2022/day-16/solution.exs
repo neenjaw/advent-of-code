@@ -6,6 +6,16 @@ Mix.install([:jason, {:libgraph, "~> 0.16.0"}])
 {:ok, input_contents} = File.read("./2022/day-16/input.txt")
 
 defmodule Solution do
+  def read_example() do
+    {:ok, ex_contents} = File.read("./2022/day-16/example.txt")
+    ex_contents
+  end
+
+  def read_input() do
+    {:ok, input_contents} = File.read("./2022/day-16/input.txt")
+    input_contents
+  end
+
   def parse(contents) do
     contents
     |> String.split(~r{\n}, trim: true)
@@ -28,6 +38,22 @@ defmodule Solution do
     vertex_metadata = Map.put(vertex_metadata, node, String.to_integer(flow))
 
     {graph, vertex_metadata}
+  end
+
+  def collapse_graph({graph, vertices}) do
+    reduced_graph =
+      vertices
+      |> Enum.reduce(graph, fn
+        {v, 0} ->
+          for in_neighbor <- Graph.in_neighbors(g, v),
+              out_neighbor <- Graph.out_neighbors(g, v) do
+            # TODO
+            nil
+          end
+
+        _ ->
+          graph
+      end)
   end
 
   def simulate({graph, vertex_metadata}, time \\ 30) do
@@ -111,15 +137,113 @@ defmodule Solution do
     |> Enum.filter(fn {_v, _path, cost} -> time_remaining - cost > 0 end)
   end
 
-  def score(vs, open_vs, total_time) do
+  #
+  # Part 2
+  #
+
+  def simulate_pachyderm({graph, vertex_metadata}, time \\ 26) do
+    state = %{
+      total_time: time,
+      time_remaining: time,
+      graph: graph,
+      vertices: vertex_metadata,
+      opened: %{},
+      steps: [{{"AA", time, time}, {"AA", time, time}}],
+      stops: [{:me, "AA"}, {:ele, "AA"}]
+    }
+
+    do_simulate_pachyderm(state)
+  end
+
+  def do_simulate_pachyderm(
+        state = %{
+          steps: [last_step | _],
+          time_remaining: time_remaining
+        }
+      ) do
+    cond do
+      time_remaining == 0 ->
+        state
+
+      true ->
+        case last_step do
+          {{me_current, _, ^time_remaining}, el_last_move} ->
+            find_options(state, me_current)
+            |> Enum.map(fn {next_stop, next_move_at} ->
+              do_simulate_pachyderm(%{
+                state
+                | opened: Map.put(state.opened, next_stop, next_move_at),
+                  steps: [
+                    {{next_stop, time_remaining, next_move_at}, el_last_move} | state.steps
+                  ],
+                  stops: [{:me, next_stop} | state.stops]
+              })
+            end)
+            |> then(fn
+              [] -> state
+              results -> Enum.max_by(results, &score/1)
+            end)
+
+          {my_last_move, {ele_current, _, ^time_remaining}} ->
+            find_options(state, ele_current)
+            |> Enum.map(fn {next_stop, next_move_at} ->
+              do_simulate_pachyderm(%{
+                state
+                | opened: Map.put(state.opened, next_stop, next_move_at),
+                  steps: [{my_last_move, {next_stop, time_remaining, next_move_at}} | state.steps],
+                  stops: [{:ele, next_stop} | state.stops]
+              })
+            end)
+            |> then(fn
+              [] -> state
+              results -> Enum.max_by(results, &score/1)
+            end)
+
+          _ ->
+            do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1})
+        end
+    end
+  end
+
+  def find_options(
+        %{graph: g, vertices: vs, opened: open_vs, time_remaining: time_remaining},
+        current_stop
+      ) do
+    vs
+    |> Map.drop([current_stop | Map.keys(open_vs)])
+    |> Enum.filter(&(elem(&1, 1) > 0))
+    |> Enum.map(fn {v, _flow} ->
+      case Graph.dijkstra(g, current_stop, v) do
+        [_ | path] ->
+          {v, length(path)}
+
+        nil ->
+          nil
+      end
+    end)
+    |> Enum.filter(fn
+      {_v, cost} -> time_remaining - cost > 0
+      _ -> false
+    end)
+    |> Enum.map(fn {v, cost} ->
+      open_valve_at = time_remaining - cost - 1
+      {v, open_valve_at}
+    end)
+  end
+
+  #
+  # Support
+  #
+
+  def score(state) do
+    score(state.vertices, state.opened, state.total_time)
+  end
+
+  def score(vs, open_vs, _total_time) do
     open_vs
     |> Enum.reduce(0, fn {v, time_opened}, acc ->
       acc + time_opened * Map.get(vs, v)
     end)
-  end
-
-  def score(state) do
-    score(state.vertices, state.opened, state.total_time)
   end
 end
 
@@ -129,20 +253,23 @@ ex_contents
 |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
 |> IO.inspect(label: "example part 1")
 
-# VERY SLOW
-input_contents
-|> Solution.parse()
-|> Solution.simulate()
-|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
-|> IO.inspect(label: "input part 1")
-
-# ex_contents
-# |> IO.inspect(label: "example part 2")
-
+# # VERY SLOW
 # input_contents
+# |> Solution.parse()
+# |> Solution.simulate()
+# |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
 # |> IO.inspect(label: "input part 1")
 
-# input_contents
-# |> IO.inspect(label: "input part 2")
+ex_contents
+|> Solution.parse()
+|> Solution.simulate_pachyderm()
+|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
+|> IO.inspect(label: "example part 2")
+
+input_contents
+|> Solution.parse()
+|> Solution.simulate_pachyderm()
+|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
+|> IO.inspect(label: "input part 2")
 
 # AA, DD, BB, JJ, HH, EE, CC
