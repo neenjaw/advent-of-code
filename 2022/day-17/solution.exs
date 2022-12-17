@@ -3,11 +3,11 @@
 Mix.install([:jason, {:libgraph, "~> 0.16.0"}])
 
 defmodule Rock do
-  def get_rock(:bar), do: MapSet.new([{0, 0}, {0, 1}, {0, 2}, {0, 3}])
-  def get_rock(:plus), do: MapSet.new([{1, 0}, {1, 1}, {1, 2}, {0, 1}, {2, 1}])
-  def get_rock(:el), do: MapSet.new([{0, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 2}])
-  def get_rock(:stick), do: MapSet.new([{3, 0}, {2, 0}, {1, 0}, {0, 0}])
-  def get_rock(:square), do: MapSet.new([{0, 0}, {0, 1}, {1, 0}, {1, 1}])
+  def get_rock(:bar), do: MapSet.new([{1, 0}, {1, 1}, {1, 2}, {1, 3}])
+  def get_rock(:plus), do: MapSet.new([{2, 0}, {2, 1}, {2, 2}, {1, 1}, {3, 1}])
+  def get_rock(:el), do: MapSet.new([{1, 0}, {1, 1}, {1, 2}, {2, 2}, {3, 2}])
+  def get_rock(:stick), do: MapSet.new([{4, 0}, {3, 0}, {2, 0}, {1, 0}])
+  def get_rock(:square), do: MapSet.new([{1, 0}, {1, 1}, {2, 0}, {2, 1}])
 
   def translate(rock, {dy, dx}),
     do: Enum.into(rock, MapSet.new(), fn {y, x} -> {y + dy, x + dx} end)
@@ -17,7 +17,7 @@ defmodule Chamber do
   defstruct y_start: 3,
             x_start: 2,
             width: 7,
-            settled: MapSet.new([{-1, 0}, {-1, 1}, {-1, 2}, {-1, 3}, {-1, 4}, {-1, 5}, {-1, 6}]),
+            settled: MapSet.new([{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}]),
             last: :square,
             current: :bar,
             rock: :bar |> Rock.get_rock() |> Rock.translate({3, 2}),
@@ -142,7 +142,7 @@ defmodule Solution do
     end
   end
 
-  def tallest_point(rock), do: Enum.max_by(rock, fn {y, _x} -> y end) |> elem(0) |> Kernel.+(1)
+  def tallest_point(rock), do: Enum.max_by(rock, fn {y, _x} -> y end) |> elem(0)
 
   def get_next_rock(:bar), do: :plus
   def get_next_rock(:plus), do: :el
