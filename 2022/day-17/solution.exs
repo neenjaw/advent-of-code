@@ -85,8 +85,6 @@ defmodule Solution do
       |> then(&check_loop_start(&1, jet_index))
       |> then(&check_loop_end(&1, jet_index))
     else
-      state.settled_rock_count |> IO.inspect(label: "rocks after cycle")
-
       state
     end
   end
