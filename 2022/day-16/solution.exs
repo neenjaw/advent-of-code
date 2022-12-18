@@ -40,22 +40,6 @@ defmodule Solution do
     {graph, vertex_metadata}
   end
 
-  def collapse_graph({graph, vertices}) do
-    reduced_graph =
-      vertices
-      |> Enum.reduce(graph, fn
-        {v, 0} ->
-          for in_neighbor <- Graph.in_neighbors(g, v),
-              out_neighbor <- Graph.out_neighbors(g, v) do
-            # TODO
-            nil
-          end
-
-        _ ->
-          graph
-      end)
-  end
-
   def simulate({graph, vertex_metadata}, time \\ 30) do
     state = %{
       total_time: time,
@@ -152,55 +136,71 @@ defmodule Solution do
       stops: [{:me, "AA"}, {:ele, "AA"}]
     }
 
-    do_simulate_pachyderm(state)
+    memo = %{}
+
+    {result, _memo} = do_simulate_pachyderm(state, memo)
+    result
   end
 
   def do_simulate_pachyderm(
         state = %{
           steps: [last_step | _],
           time_remaining: time_remaining
-        }
+        },
+        memo
       ) do
     cond do
       time_remaining == 0 ->
-        state
+        {state, memo}
 
       true ->
         case last_step do
           {{me_current, _, ^time_remaining}, el_last_move} ->
-            find_options(state, me_current)
-            |> Enum.map(fn {next_stop, next_move_at} ->
-              do_simulate_pachyderm(%{
-                state
-                | opened: Map.put(state.opened, next_stop, next_move_at),
-                  steps: [
-                    {{next_stop, time_remaining, next_move_at}, el_last_move} | state.steps
-                  ],
-                  stops: [{:me, next_stop} | state.stops]
-              })
-            end)
-            |> then(fn
-              [] -> state
-              results -> Enum.max_by(results, &score/1)
+            state
+            |> find_options(me_current)
+            |> Enum.reduce({state, memo}, fn {next_stop, next_move_at}, {best_state, memo_acc} ->
+              {result_state, next_memo_acc} =
+                do_simulate_pachyderm(
+                  %{
+                    state
+                    | opened: Map.put(state.opened, next_stop, next_move_at),
+                      steps: [
+                        {{next_stop, time_remaining, next_move_at}, el_last_move} | state.steps
+                      ],
+                      stops: [{:me, next_stop} | state.stops]
+                  },
+                  memo_acc
+                )
+
+              next_best_state = Enum.max_by([best_state, result_state], &score/1)
+
+              {next_best_state, next_memo_acc}
             end)
 
           {my_last_move, {ele_current, _, ^time_remaining}} ->
-            find_options(state, ele_current)
-            |> Enum.map(fn {next_stop, next_move_at} ->
-              do_simulate_pachyderm(%{
-                state
-                | opened: Map.put(state.opened, next_stop, next_move_at),
-                  steps: [{my_last_move, {next_stop, time_remaining, next_move_at}} | state.steps],
-                  stops: [{:ele, next_stop} | state.stops]
-              })
-            end)
-            |> then(fn
-              [] -> state
-              results -> Enum.max_by(results, &score/1)
+            state
+            |> find_options(ele_current)
+            |> Enum.reduce({state, memo}, fn {next_stop, next_move_at}, {best_state, memo_acc} ->
+              {result_state, next_memo_acc} =
+                do_simulate_pachyderm(
+                  %{
+                    state
+                    | opened: Map.put(state.opened, next_stop, next_move_at),
+                      steps: [
+                        {my_last_move, {next_stop, time_remaining, next_move_at}} | state.steps
+                      ],
+                      stops: [{:ele, next_stop} | state.stops]
+                  },
+                  memo
+                )
+
+              next_best_state = Enum.max_by([best_state, result_state], &score/1)
+
+              {next_best_state, next_memo_acc}
             end)
 
           _ ->
-            do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1})
+            do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1}, memo)
         end
     end
   end
@@ -234,6 +234,10 @@ defmodule Solution do
   #
   # Support
   #
+
+  def score({state, _memo}) do
+    score(state)
+  end
 
   def score(state) do
     score(state.vertices, state.opened, state.total_time)
