@@ -158,46 +158,26 @@ defmodule Solution do
           {{me_current, _, ^time_remaining}, el_last_move} ->
             state
             |> find_options(me_current)
-            |> Enum.reduce({state, memo}, fn {next_stop, next_move_at}, {best_state, memo_acc} ->
-              {result_state, next_memo_acc} =
-                do_simulate_pachyderm(
-                  %{
-                    state
-                    | opened: Map.put(state.opened, next_stop, next_move_at),
-                      steps: [
-                        {{next_stop, time_remaining, next_move_at}, el_last_move} | state.steps
-                      ],
-                      stops: [{:me, next_stop} | state.stops]
-                  },
-                  memo_acc
-                )
-
-              next_best_state = Enum.max_by([best_state, result_state], &score/1)
-
-              {next_best_state, next_memo_acc}
-            end)
+            |> handle_options(
+              state,
+              memo,
+              fn next_stop, next_move_at ->
+                {{next_stop, time_remaining, next_move_at}, el_last_move}
+              end,
+              :me
+            )
 
           {my_last_move, {ele_current, _, ^time_remaining}} ->
             state
             |> find_options(ele_current)
-            |> Enum.reduce({state, memo}, fn {next_stop, next_move_at}, {best_state, memo_acc} ->
-              {result_state, next_memo_acc} =
-                do_simulate_pachyderm(
-                  %{
-                    state
-                    | opened: Map.put(state.opened, next_stop, next_move_at),
-                      steps: [
-                        {my_last_move, {next_stop, time_remaining, next_move_at}} | state.steps
-                      ],
-                      stops: [{:ele, next_stop} | state.stops]
-                  },
-                  memo
-                )
-
-              next_best_state = Enum.max_by([best_state, result_state], &score/1)
-
-              {next_best_state, next_memo_acc}
-            end)
+            |> handle_options(
+              state,
+              memo,
+              fn next_stop, next_move_at ->
+                {my_last_move, {next_stop, time_remaining, next_move_at}}
+              end,
+              :ele
+            )
 
           _ ->
             do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1}, memo)
@@ -231,6 +211,36 @@ defmodule Solution do
     end)
   end
 
+  def handle_options(options, state, memo, build_next_step_fn, who) do
+    options
+    |> Enum.reduce({state, memo}, fn {next_stop, next_move_at}, {best_state, memo_acc} ->
+      next_state = %{
+        state
+        | opened: Map.put(state.opened, next_stop, next_move_at),
+          steps: [
+            build_next_step_fn.(next_stop, next_move_at) | state.steps
+          ],
+          stops: [{who, next_stop} | state.stops]
+      }
+
+      {result_state, next_memo_acc} =
+        case memo_acc[next_state.opened] do
+          nil ->
+            do_simulate_pachyderm(
+              next_state,
+              memo_acc
+            )
+
+          memo_state ->
+            {memo_state, memo_acc}
+        end
+
+      next_best_state = Enum.max_by([best_state, result_state], &score/1)
+
+      {next_best_state, Map.put(next_memo_acc, next_best_state.opened, next_best_state)}
+    end)
+  end
+
   #
   # Support
   #
@@ -240,10 +250,10 @@ defmodule Solution do
   end
 
   def score(state) do
-    score(state.vertices, state.opened, state.total_time)
+    score(state.vertices, state.opened)
   end
 
-  def score(vs, open_vs, _total_time) do
+  def score(vs, open_vs) do
     open_vs
     |> Enum.reduce(0, fn {v, time_opened}, acc ->
       acc + time_opened * Map.get(vs, v)
@@ -262,7 +272,7 @@ ex_contents
 # |> Solution.parse()
 # |> Solution.simulate()
 # |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
-# |> IO.inspect(label: "input part 1")
+# |> IO.inspect(label: "input part 1") # => 1460
 
 ex_contents
 |> Solution.parse()
