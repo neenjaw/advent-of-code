@@ -130,7 +130,8 @@ defmodule Solution do
       total_time: time,
       time_remaining: time,
       graph: graph,
-      vertices: vertex_metadata,
+      vertices: vertex_metadata |> Enum.filter(&(elem(&1, 1) > 0)) |> Enum.into(%{}),
+      all_vertices: vertex_metadata,
       opened: %{},
       steps: [{{"AA", time, time}, {"AA", time, time}}],
       stops: [{:me, "AA"}, {:ele, "AA"}]
@@ -211,38 +212,77 @@ defmodule Solution do
     end)
   end
 
-  def handle_options(options, state, memo, build_next_step_fn, who) do
+  def handle_options(options, in_state, in_memo, build_next_step_fn, who) do
     options
-    |> Enum.reduce({state, memo}, fn {next_stop, next_move_at}, {best_state, memo_acc} ->
+    |> Enum.reduce({in_state, in_memo}, fn {next_stop, next_move_at},
+                                           {best_state_acc, memo_acc} ->
       next_state = %{
-        state
-        | opened: Map.put(state.opened, next_stop, next_move_at),
+        in_state
+        | opened: Map.put(in_state.opened, next_stop, next_move_at),
           steps: [
-            build_next_step_fn.(next_stop, next_move_at) | state.steps
+            build_next_step_fn.(next_stop, next_move_at) | in_state.steps
           ],
-          stops: [{who, next_stop} | state.stops]
+          stops: [{who, next_stop} | in_state.stops]
       }
 
-      {result_state, next_memo_acc} =
-        case memo_acc[next_state.opened] do
+      {result_state, result_memo} =
+        case get_memo_state(memo_acc, next_state, next_stop) do
           nil ->
-            do_simulate_pachyderm(
-              next_state,
-              memo_acc
-            )
+            {result_state, result_memo} =
+              do_simulate_pachyderm(
+                next_state,
+                memo_acc
+              )
+
+            {result_state, update_memo_state(result_memo, next_state, next_stop)}
 
           memo_state ->
+            # IO.puts("label: has memo")
             {memo_state, memo_acc}
         end
 
-      next_best_state = Enum.max_by([best_state, result_state], &score/1)
-
-      {next_best_state, Map.put(next_memo_acc, next_best_state.opened, next_best_state)}
+      {Enum.max_by([result_state, best_state_acc], &score/1), result_memo}
     end)
   end
 
   #
-  # Support
+  # Memo
+  #
+
+  def get_memo_state(memo = %{}, state = %{}, next_move) do
+    done_moves = state.opened |> Map.keys() |> MapSet.new()
+
+    remaining_moves =
+      state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
+
+    [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
+    |> IO.inspect(label: "get")
+
+    Map.get(memo, {next_move, remaining_moves})
+  end
+
+  def update_memo_state(memo = %{}, state = %{}, next_move) do
+    done_moves = state.opened |> Map.keys() |> MapSet.new()
+
+    remaining_moves =
+      state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
+
+    [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
+    |> IO.inspect(label: "up")
+
+    raise "1"
+
+    case Map.get(memo, {next_move, remaining_moves}) do
+      nil ->
+        Map.put(memo, {next_move, remaining_moves}, state)
+
+      memo_state ->
+        Map.put(memo, {next_move, remaining_moves}, Enum.max_by([state, memo_state], &score/1))
+    end
+  end
+
+  #
+  # Score
   #
 
   def score({state, _memo}) do
