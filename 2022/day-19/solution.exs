@@ -17,7 +17,19 @@ defmodule Solution do
     input
     |> String.split("\n", trim: true)
     |> Enum.map(&to_blueprint/1)
-    |> solve()
+    |> solve(24)
+    |> Enum.map(fn {q, l} -> q * l end)
+    |> Enum.sum()
+  end
+
+  def part2(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.take(3)
+    |> Enum.map(&to_blueprint/1)
+    |> solve(32)
+    |> Enum.map(&elem(&1, 0))
+    |> Enum.reduce(&Kernel.*/2)
   end
 
   def to_blueprint(line) do
@@ -38,10 +50,6 @@ defmodule Solution do
         obsidian: %{ore: obo, clay: oc, obsidian: 0, geode: 0},
         geode: %{ore: go, obsidian: gob, clay: 0, geode: 0}
       },
-      restrictions: %{
-        next: [],
-        future: []
-      },
       robots: %{
         ore: 1,
         clay: 0,
@@ -58,95 +66,69 @@ defmodule Solution do
     }
   end
 
-  def solve(blueprints) do
-    blueprints
-    |> Enum.map(&do_solve/1)
-    |> Enum.sum()
+  def solve(blueprints, mins) do
+    Enum.map(blueprints, &do_solve(&1, mins))
   end
 
-  def do_solve(state) do
-    IO.puts("label: 51")
-
+  def do_solve(state, mins) do
     state
-    |> simulate(fn state -> state.time == 24 end)
-    |> then(&(elem(&1, 0) * state.label))
-    |> tap(&IO.inspect(&1))
+    |> simulate(fn state -> state.time == mins end)
+    |> then(&{&1.bank.geode, &1.label})
+    |> tap(fn _ -> IO.write(".") end)
   end
 
-  def get_state_key(state) do
-    {
-      state.time,
-      state.bank.ore,
-      state.bank.clay,
-      state.bank.obsidian,
-      state.robots.ore,
-      state.robots.clay,
-      state.robots.obsidian
-    }
+  def simulate(state, done_fn) do
+    do_simulate([state], done_fn)
   end
 
-  def simulate(state, done_fn, memo \\ %{}) do
-    cond do
-      done_fn.(state) ->
-        # IO.puts("label: done")
+  def do_simulate(states, done_fn) do
+    next_states = Enum.flat_map(states, &branch/1)
+    max_geode_state = Enum.max_by(next_states, & &1.bank.geode)
 
-        {state.bank.geode, Map.put(memo, get_state_key(state), state.bank.geode)}
-
-      Map.get(memo, get_state_key(state), -1) >= state.bank.geode ->
-        # IO.puts("label: use memo")
-        {Map.get(memo, get_state_key(state)), memo}
-
-      true ->
-        # IO.puts("label: get memo")
-        {result, result_memo} = do_simulate(state, done_fn, memo)
-        {result, Map.put(result_memo, get_state_key(state), result)}
+    if done_fn.(hd(next_states)) do
+      max_geode_state
+    else
+      next_states
+      |> Enum.sort_by(
+        &Enum.zip(
+          [&1.bank.geode, &1.bank.obsidian, &1.bank.clay, &1.bank.clay],
+          [&1.robots.geode, &1.robots.obsidian, &1.robots.clay, &1.robots.clay]
+        ),
+        :desc
+      )
+      |> Enum.take(5000)
+      |> do_simulate(done_fn)
     end
   end
 
-  def do_simulate(state, done_fn, memo) do
-    state
-    |> choices()
-    |> Enum.reduce({state.bank.geode, memo}, fn {choice, next_state}, {best_result, memo_acc} ->
-      {result, result_memo} =
-        case choice do
-          :build_ore ->
-            next_state
-            |> add_robot(:ore)
+  def branch(state) do
+    [:geode, :obsidian, :clay, :ore, :nothing]
+    |> Enum.filter(fn
+      :ore ->
+        has_resources(state, :ore)
 
-          :build_clay ->
-            next_state
-            |> add_robot(:clay)
+      :clay ->
+        has_resources(state, :clay)
 
-          :build_obsidian ->
-            next_state
-            |> add_robot(:obsidian)
+      :obsidian ->
+        has_resources(state, :obsidian)
 
-          :build_geode ->
-            next_state
-            |> add_robot(:geode)
+      :geode ->
+        has_resources(state, :geode)
 
-          :nothing ->
-            next_state
-        end
-        |> then(fn choice_state ->
-          choice_state
-          |> tick_state()
-          |> simulate(done_fn, memo_acc)
-        end)
-
-      {Enum.max([best_result, result]), result_memo}
+      :nothing ->
+        not has_resources(state, :geode)
+    end)
+    |> Enum.map(fn
+      :nothing -> tick_state(state)
+      type -> state |> tick_state() |> add_robot(type)
     end)
   end
 
-  def tick_state(state) do
-    %{
-      state
-      | time: state.time + 1,
-        bank:
-          Enum.into(state.bank, %{}, fn {supply_type, amount} ->
-            {supply_type, amount + state.robots[supply_type]}
-          end)
-    }
+  def has_resources(state, type) do
+    Enum.all?(state.costs[type], fn {supply_type, cost_amount} ->
+      state.bank[supply_type] >= cost_amount
+    end)
   end
 
   def add_robot(state, robot_type) do
@@ -160,168 +142,46 @@ defmodule Solution do
     }
   end
 
-  def choices(state) do
-    all_choices = [:build_geode, :build_obsidian, :build_clay, :build_ore, :nothing]
-    possible_choices = all_choices -- state.restrictions.next -- state.restrictions.future
-
-    possible_choices
-    |> Enum.filter(fn
-      :build_ore ->
-        has_resources(state, :ore)
-
-      :build_clay ->
-        has_resources(state, :clay)
-
-      :build_obsidian ->
-        has_resources(state, :obsidian)
-
-      :build_geode ->
-        has_resources(state, :geode)
-
-      :nothing ->
-        not has_resources(state, :geode)
-    end)
-    |> Enum.map(fn
-      :nothing ->
-        next_restrictions =
-          []
-          |> then(fn restricted ->
-            if has_resources(state, :ore),
-              do: [:build_ore | restricted],
-              else: restricted
+  def tick_state(state) do
+    %{
+      state
+      | time: state.time + 1,
+        bank:
+          Enum.into(state.bank, %{}, fn {supply_type, amount} ->
+            {supply_type, amount + state.robots[supply_type]}
           end)
-          |> then(fn restricted ->
-            if has_resources(state, :clay),
-              do: [:build_clay | restricted],
-              else: restricted
-          end)
-          |> then(fn restricted ->
-            if has_resources(state, :obsidian),
-              do: [:build_obsidian | restricted],
-              else: restricted
-          end)
-
-        {:nothing,
-         %{
-           state
-           | restrictions: %{
-               state.restrictions
-               | next: next_restrictions
-             }
-         }}
-
-      :build_ore ->
-        restricted_in_future? =
-          :build_ore not in state.restrictions.future and
-            state.robots.ore + 1 ==
-              Enum.max([
-                state.costs.ore.ore,
-                state.costs.clay.ore,
-                state.costs.obsidian.ore,
-                state.costs.geode.ore
-              ])
-
-        future_restrictions =
-          if restricted_in_future? do
-            [:build_ore | state.restrictions.future] |> Enum.uniq()
-          else
-            state.restrictions.future
-          end
-
-        {:build_ore,
-         %{
-           state
-           | restrictions: %{
-               state.restrictions
-               | next: [],
-                 future: future_restrictions
-             }
-         }}
-
-      :build_clay ->
-        restricted_in_future? =
-          :build_clay not in state.restrictions.future and
-            state.robots.clay + 1 ==
-              Enum.max([
-                state.costs.ore.clay,
-                state.costs.clay.clay,
-                state.costs.obsidian.clay,
-                state.costs.geode.clay
-              ])
-
-        future_restrictions =
-          if restricted_in_future? do
-            [:build_clay | state.restrictions.future] |> Enum.uniq()
-          else
-            state.restrictions.future
-          end
-
-        {:build_clay,
-         %{
-           state
-           | restrictions: %{
-               state.restrictions
-               | next: [],
-                 future: future_restrictions
-             }
-         }}
-
-      :build_obsidian ->
-        restricted_in_future? =
-          :build_obsidian not in state.restrictions.future and
-            state.robots.obsidian + 1 ==
-              Enum.max([
-                state.costs.ore.obsidian,
-                state.costs.clay.obsidian,
-                state.costs.obsidian.obsidian,
-                state.costs.geode.obsidian
-              ])
-
-        future_restrictions =
-          if restricted_in_future? do
-            [:build_obsidian | state.restrictions.future] |> Enum.uniq()
-          else
-            state.restrictions.future
-          end
-
-        {:build_obsidian,
-         %{
-           state
-           | restrictions: %{
-               state.restrictions
-               | next: [],
-                 future: future_restrictions
-             }
-         }}
-
-      choice ->
-        {choice, state}
-    end)
+    }
   end
 
-  def has_resources(state, type) do
-    Enum.all?(state.costs[type], fn {supply_type, cost_amount} ->
-      state.bank[supply_type] >= cost_amount
-    end)
+  def get_state_key(state) do
+    {
+      state.time,
+      state.bank.ore,
+      state.bank.clay,
+      state.bank.obsidian,
+      state.robots.ore,
+      state.robots.clay,
+      state.robots.obsidian
+    }
   end
 end
 
 Solution.read_example()
 |> Solution.part1()
-|> then(fn result -> if result != 33, do: raise("#{result}!"), else: result end)
+|> then(fn result -> if result != 33, do: raise("#{result}"), else: result end)
 |> IO.inspect(label: "example part 1")
 
 Solution.read_input()
 |> Solution.part1()
-|> then(fn result -> if result != 58, do: raise("#{result}!"), else: result end)
+|> then(fn result -> if result != 1199, do: raise("#{result}"), else: result end)
 |> IO.inspect(label: "input part 1")
 
-# Solution.read_example()
-# |> Solution.part2()
-# |> then(fn result -> if result != 58, do: raise("#{result}!"), else: result end)
-# |> IO.inspect(label: "example part 2")
+Solution.read_example()
+|> Solution.part2()
+# |> then(fn result -> if result != 56 + 2 * 62, do: IO.puts("#{result}"), else: result end)
+|> IO.inspect(label: "example part 2")
 
-# Solution.read_input()
-# |> Solution.part2()
-# |> then(fn result -> if result != 2018, do: raise("#{result}!"), else: result end)
-# |> IO.inspect(label: "input part 2")
+Solution.read_input()
+|> Solution.part2()
+# |> then(fn result -> if result != 2018, do: raise("#{result}"), else: result end)
+|> IO.inspect(label: "input part 2")
