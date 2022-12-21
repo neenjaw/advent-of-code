@@ -137,54 +137,54 @@ defmodule Solution do
       stops: [{:me, "AA"}, {:ele, "AA"}]
     }
 
-    memo = %{}
-
-    {result, _memo} = do_simulate_pachyderm(state, memo)
-    result
+    do_simulate_pachyderm([state])
   end
 
-  def do_simulate_pachyderm(
-        state = %{
-          steps: [last_step | _],
-          time_remaining: time_remaining
-        },
-        memo
-      ) do
-    cond do
-      time_remaining == 0 ->
-        {state, memo}
-
-      true ->
-        case last_step do
-          {{me_current, _, ^time_remaining}, el_last_move} ->
-            state
-            |> find_options(me_current)
-            |> handle_options(
-              state,
-              memo,
-              fn next_stop, next_move_at ->
-                {{next_stop, time_remaining, next_move_at}, el_last_move}
-              end,
-              :me
-            )
-
-          {my_last_move, {ele_current, _, ^time_remaining}} ->
-            state
-            |> find_options(ele_current)
-            |> handle_options(
-              state,
-              memo,
-              fn next_stop, next_move_at ->
-                {my_last_move, {next_stop, time_remaining, next_move_at}}
-              end,
-              :ele
-            )
-
-          _ ->
-            do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1}, memo)
-        end
-    end
+  def do_simulate_pachyderm() do
   end
+
+  # def branch(
+  #       state = %{
+  #         steps: [last_step | _],
+  #         time_remaining: time_remaining
+  #       },
+  #       memo
+  #     ) do
+  #   cond do
+  #     time_remaining == 0 ->
+  #       {state, memo}
+
+  #     true ->
+  #       case last_step do
+  #         {{me_current, _, ^time_remaining}, el_last_move} ->
+  #           state
+  #           |> find_options(me_current)
+  #           |> handle_options(
+  #             state,
+  #             memo,
+  #             fn next_stop, next_move_at ->
+  #               {{next_stop, time_remaining, next_move_at}, el_last_move}
+  #             end,
+  #             :me
+  #           )
+
+  #         {my_last_move, {ele_current, _, ^time_remaining}} ->
+  #           state
+  #           |> find_options(ele_current)
+  #           |> handle_options(
+  #             state,
+  #             memo,
+  #             fn next_stop, next_move_at ->
+  #               {my_last_move, {next_stop, time_remaining, next_move_at}}
+  #             end,
+  #             :ele
+  #           )
+
+  #         _ ->
+  #           do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1}, memo)
+  #       end
+  #   end
+  # end
 
   def find_options(
         %{graph: g, vertices: vs, opened: open_vs, time_remaining: time_remaining},
@@ -249,41 +249,45 @@ defmodule Solution do
   # Memo
   #
 
-  def get_memo_state(memo = %{}, state = %{}, next_move) do
-    done_moves = state.opened |> Map.keys() |> MapSet.new()
+  # def get_memo_state(memo = %{}, state = %{}, next_move) do
+  #   done_moves = state.opened |> Map.keys() |> MapSet.new()
 
-    remaining_moves =
-      state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
+  #   remaining_moves =
+  #     state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
 
-    [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
-    |> IO.inspect(label: "get")
+  #   [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
+  #   |> IO.inspect(label: "get")
 
-    Map.get(memo, {next_move, remaining_moves})
-  end
+  #   Map.get(memo, {next_move, remaining_moves})
+  # end
 
-  def update_memo_state(memo = %{}, state = %{}, next_move) do
-    done_moves = state.opened |> Map.keys() |> MapSet.new()
+  # def update_memo_state(memo = %{}, state = %{}, next_move) do
+  #   done_moves = state.opened |> Map.keys() |> MapSet.new()
 
-    remaining_moves =
-      state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
+  #   remaining_moves =
+  #     state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
 
-    [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
-    |> IO.inspect(label: "up")
+  #   [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
+  #   |> IO.inspect(label: "up")
 
-    raise "1"
+  #   raise "1"
 
-    case Map.get(memo, {next_move, remaining_moves}) do
-      nil ->
-        Map.put(memo, {next_move, remaining_moves}, state)
+  #   case Map.get(memo, {next_move, remaining_moves}) do
+  #     nil ->
+  #       Map.put(memo, {next_move, remaining_moves}, state)
 
-      memo_state ->
-        Map.put(memo, {next_move, remaining_moves}, Enum.max_by([state, memo_state], &score/1))
-    end
-  end
+  #     memo_state ->
+  #       Map.put(memo, {next_move, remaining_moves}, Enum.max_by([state, memo_state], &score/1))
+  #   end
+  # end
 
   #
   # Score
   #
+
+  def flow(state) do
+    Enum.reduce(state.opened, 0, &(state.vertices[&1] + &2))
+  end
 
   def score({state, _memo}) do
     score(state)
@@ -307,12 +311,12 @@ ex_contents
 |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
 |> IO.inspect(label: "example part 1")
 
-# # VERY SLOW
-# input_contents
-# |> Solution.parse()
-# |> Solution.simulate()
-# |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
-# |> IO.inspect(label: "input part 1") # => 1460
+input_contents
+|> Solution.parse()
+|> Solution.simulate()
+|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
+# => 1460
+|> IO.inspect(label: "input part 1")
 
 ex_contents
 |> Solution.parse()

@@ -29,7 +29,7 @@ defmodule Solution do
     |> Enum.map(&to_blueprint/1)
     |> solve(32)
     |> Enum.map(&elem(&1, 0))
-    |> Enum.reduce(&Kernel.*/2)
+    |> Enum.reduce(&*/2)
   end
 
   def to_blueprint(line) do
@@ -178,10 +178,10 @@ Solution.read_input()
 
 Solution.read_example()
 |> Solution.part2()
-# |> then(fn result -> if result != 56 + 2 * 62, do: IO.puts("#{result}"), else: result end)
+|> then(fn result -> if result != 3348, do: IO.puts("#{result}"), else: result end)
 |> IO.inspect(label: "example part 2")
 
 Solution.read_input()
 |> Solution.part2()
-# |> then(fn result -> if result != 2018, do: raise("#{result}"), else: result end)
+|> then(fn result -> if result != 3510, do: raise("#{result}"), else: result end)
 |> IO.inspect(label: "input part 2")
