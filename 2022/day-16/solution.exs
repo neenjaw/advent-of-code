@@ -140,51 +140,80 @@ defmodule Solution do
     do_simulate_pachyderm([state])
   end
 
-  def do_simulate_pachyderm() do
+  def do_simulate_pachyderm(states) do
+    states |> hd() |> then(& &1.time_remaining) |> IO.inspect(label: "time")
+    length(states) |> IO.inspect(label: "144")
+    next_states = Enum.flat_map(states, &branch/1)
+
+    length(next_states) |> IO.inspect(label: "147")
+    max_valve_state = Enum.max_by(next_states, &score/1)
+
+    if max_valve_state.time_remaining == 0 do
+      max_valve_state
+    else
+      max_flow = flow(max_valve_state)
+
+      next_states
+      |> Enum.sort_by(&{map_size(&1.opened), score(&1), flow(&1)}, :desc)
+      |> Enum.take(4000)
+      |> do_simulate_pachyderm()
+    end
   end
 
-  # def branch(
-  #       state = %{
-  #         steps: [last_step | _],
-  #         time_remaining: time_remaining
-  #       },
-  #       memo
-  #     ) do
-  #   cond do
-  #     time_remaining == 0 ->
-  #       {state, memo}
+  def branch(state) do
+    [state]
+    |> Enum.flat_map(fn
+      state = %{steps: [last_step | _], time_remaining: time_remaining} ->
+        case last_step do
+          {{me_current, _, ^time_remaining}, el_last_move} ->
+            possible_moves =
+              state
+              |> find_options(me_current)
+              |> handle_options(
+                state,
+                fn next_stop, next_move_at ->
+                  {{next_stop, time_remaining, next_move_at}, el_last_move}
+                end,
+                :me
+              )
 
-  #     true ->
-  #       case last_step do
-  #         {{me_current, _, ^time_remaining}, el_last_move} ->
-  #           state
-  #           |> find_options(me_current)
-  #           |> handle_options(
-  #             state,
-  #             memo,
-  #             fn next_stop, next_move_at ->
-  #               {{next_stop, time_remaining, next_move_at}, el_last_move}
-  #             end,
-  #             :me
-  #           )
+            if length(possible_moves) > 0 do
+              possible_moves
+            else
+              [state]
+            end
 
-  #         {my_last_move, {ele_current, _, ^time_remaining}} ->
-  #           state
-  #           |> find_options(ele_current)
-  #           |> handle_options(
-  #             state,
-  #             memo,
-  #             fn next_stop, next_move_at ->
-  #               {my_last_move, {next_stop, time_remaining, next_move_at}}
-  #             end,
-  #             :ele
-  #           )
+          _ ->
+            [state]
+        end
+    end)
+    |> Enum.flat_map(fn
+      state = %{steps: [last_step | _], time_remaining: time_remaining} ->
+        case last_step do
+          {my_last_move, {ele_current, _, ^time_remaining}} ->
+            possible_moves =
+              state
+              |> find_options(ele_current)
+              |> handle_options(
+                state,
+                fn next_stop, next_move_at ->
+                  {my_last_move, {next_stop, time_remaining, next_move_at}}
+                end,
+                :ele
+              )
 
-  #         _ ->
-  #           do_simulate_pachyderm(%{state | time_remaining: time_remaining - 1}, memo)
-  #       end
-  #   end
-  # end
+            if length(possible_moves) > 0 do
+              possible_moves
+            else
+              [state]
+            end
+
+          _ ->
+            [state]
+        end
+    end)
+    |> Enum.map(fn state -> %{state | time_remaining: state.time_remaining - 1} end)
+  end
 
   def find_options(
         %{graph: g, vertices: vs, opened: open_vs, time_remaining: time_remaining},
@@ -212,11 +241,10 @@ defmodule Solution do
     end)
   end
 
-  def handle_options(options, in_state, in_memo, build_next_step_fn, who) do
+  def handle_options(options, in_state, build_next_step_fn, who) do
     options
-    |> Enum.reduce({in_state, in_memo}, fn {next_stop, next_move_at},
-                                           {best_state_acc, memo_acc} ->
-      next_state = %{
+    |> Enum.map(fn {next_stop, next_move_at} ->
+      %{
         in_state
         | opened: Map.put(in_state.opened, next_stop, next_move_at),
           steps: [
@@ -224,69 +252,17 @@ defmodule Solution do
           ],
           stops: [{who, next_stop} | in_state.stops]
       }
-
-      {result_state, result_memo} =
-        case get_memo_state(memo_acc, next_state, next_stop) do
-          nil ->
-            {result_state, result_memo} =
-              do_simulate_pachyderm(
-                next_state,
-                memo_acc
-              )
-
-            {result_state, update_memo_state(result_memo, next_state, next_stop)}
-
-          memo_state ->
-            # IO.puts("label: has memo")
-            {memo_state, memo_acc}
-        end
-
-      {Enum.max_by([result_state, best_state_acc], &score/1), result_memo}
     end)
   end
-
-  #
-  # Memo
-  #
-
-  # def get_memo_state(memo = %{}, state = %{}, next_move) do
-  #   done_moves = state.opened |> Map.keys() |> MapSet.new()
-
-  #   remaining_moves =
-  #     state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
-
-  #   [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
-  #   |> IO.inspect(label: "get")
-
-  #   Map.get(memo, {next_move, remaining_moves})
-  # end
-
-  # def update_memo_state(memo = %{}, state = %{}, next_move) do
-  #   done_moves = state.opened |> Map.keys() |> MapSet.new()
-
-  #   remaining_moves =
-  #     state.vertices |> Map.keys() |> MapSet.new() |> MapSet.difference(done_moves)
-
-  #   [memo_keys: Map.keys(memo), opened: state.opened, next: next_move, rem: remaining_moves]
-  #   |> IO.inspect(label: "up")
-
-  #   raise "1"
-
-  #   case Map.get(memo, {next_move, remaining_moves}) do
-  #     nil ->
-  #       Map.put(memo, {next_move, remaining_moves}, state)
-
-  #     memo_state ->
-  #       Map.put(memo, {next_move, remaining_moves}, Enum.max_by([state, memo_state], &score/1))
-  #   end
-  # end
 
   #
   # Score
   #
 
   def flow(state) do
-    Enum.reduce(state.opened, 0, &(state.vertices[&1] + &2))
+    state.opened
+    |> Enum.filter(fn {v, open_time} -> open_time > state.time_remaining end)
+    |> Enum.reduce(0, &(state.vertices[elem(&1, 0)] + &2))
   end
 
   def score({state, _memo}) do
@@ -311,12 +287,14 @@ ex_contents
 |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
 |> IO.inspect(label: "example part 1")
 
-input_contents
-|> Solution.parse()
-|> Solution.simulate()
-|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
-# => 1460
-|> IO.inspect(label: "input part 1")
+# AA, DD, BB, JJ, HH, EE, CC
+
+# input_contents
+# |> Solution.parse()
+# |> Solution.simulate()
+# |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
+# # => 1460
+# |> IO.inspect(label: "input part 1")
 
 ex_contents
 |> Solution.parse()
@@ -324,10 +302,10 @@ ex_contents
 |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
 |> IO.inspect(label: "example part 2")
 
+# DD JJ BB|HH CC EE
+
 input_contents
 |> Solution.parse()
 |> Solution.simulate_pachyderm()
 |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
 |> IO.inspect(label: "input part 2")
-
-# AA, DD, BB, JJ, HH, EE, CC
