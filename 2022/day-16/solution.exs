@@ -141,11 +141,7 @@ defmodule Solution do
   end
 
   def do_simulate_pachyderm(states) do
-    states |> hd() |> then(& &1.time_remaining) |> IO.inspect(label: "time")
-    length(states) |> IO.inspect(label: "144")
     next_states = Enum.flat_map(states, &branch/1)
-
-    length(next_states) |> IO.inspect(label: "147")
     max_valve_state = Enum.max_by(next_states, &score/1)
 
     if max_valve_state.time_remaining == 0 do
@@ -281,11 +277,11 @@ defmodule Solution do
   end
 end
 
-ex_contents
-|> Solution.parse()
-|> Solution.simulate()
-|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
-|> IO.inspect(label: "example part 1")
+# ex_contents
+# |> Solution.parse()
+# |> Solution.simulate()
+# |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
+# |> IO.inspect(label: "example part 1")
 
 # AA, DD, BB, JJ, HH, EE, CC
 
@@ -296,11 +292,11 @@ ex_contents
 # # => 1460
 # |> IO.inspect(label: "input part 1")
 
-ex_contents
-|> Solution.parse()
-|> Solution.simulate_pachyderm()
-|> then(fn sol -> {sol.stops, Solution.score(sol)} end)
-|> IO.inspect(label: "example part 2")
+# ex_contents
+# |> Solution.parse()
+# |> Solution.simulate_pachyderm()
+# |> then(fn sol -> {sol.stops, Solution.score(sol)} end)
+# |> IO.inspect(label: "example part 2")
 
 # DD JJ BB|HH CC EE
 
