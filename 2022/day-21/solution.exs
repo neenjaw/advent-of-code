@@ -41,7 +41,7 @@ defmodule Solution do
           raise "1"
       end
 
-    solve_ordered(%{}, topsorted, lookup, "root")
+    solve_ordered(%{}, topsorted, lookup, "root", :eval)
   end
 
   def to_rule(line) do
@@ -49,9 +49,15 @@ defmodule Solution do
       Regex.scan(~r/\b([a-zA-Z]+)\b/, line)
       |> Enum.map(&hd/1)
 
+    op =
+      case Regex.scan(~r/([+\/*-])/, line) do
+        [] -> nil
+        [[op | _]] -> op
+      end
+
     equation = String.replace(line, ":", "=")
 
-    evaluation_fn = fn values ->
+    evaluation_fn = fn values, _current_monkey ->
       input_binding = Enum.map(inputs, fn input -> {String.to_atom(input), values[input]} end)
 
       case Enum.filter(input_binding, &(elem(&1, 1) == nil)) do
@@ -65,38 +71,94 @@ defmodule Solution do
            )}
 
         l ->
-          {:value_missing, length(l), l}
+          {:value_missing, length(l), tag, l, equation, values}
+      end
+    end
+
+    rev_evaluation_fn = fn values, current_monkey ->
+      case op do
+        nil ->
+          {:ok,
+           Map.merge(
+             values,
+             Enum.into(binding, %{}, fn {key, v} -> {Atom.to_string(key), trunc(v)} end)
+           )}
+
+        _ ->
+          [l_value, r_value] = inputs
+
+          rev_equation =
+            case {current_monkey, tag, l_value, op, r_value} do
+              {c, t, c, "+", r} ->
+                {c, t, "-", r}
+
+              {c, t, l, "+", c} ->
+                {c, t, "-", l}
+
+              {c, t, c, "-", r} ->
+                {c, t, "+", r}
+
+              {c, t, l, "-", c} ->
+                {c, l, "-", t}
+
+              {c, t, c, "*", r} ->
+                {c, t, "/", r}
+
+              {c, t, l, "*", c} ->
+                {c, t, "/", l}
+
+              {c, t, c, "/", r} ->
+                {c, t, "*", r}
+
+              {c, t, l, "/", c} ->
+                {c, l, "*", t}
+            end
+            |> then(fn {out, l, op, r} -> "#{out} = #{l} #{op} #{r}" end)
+
+          input_binding =
+            Enum.map([tag | inputs] -- [current_monkey], fn input ->
+              {String.to_atom(input), values[input]}
+            end)
+
+          {_, binding} = Code.eval_string(rev_equation, input_binding)
+
+          {:ok,
+           Map.merge(
+             values,
+             Enum.into(binding, %{}, fn {key, v} -> {Atom.to_string(key), trunc(v)} end)
+           )}
       end
     end
 
     %{
       tag: tag,
       inputs: inputs,
-      eval: evaluation_fn
+      eval: evaluation_fn,
+      eval_rev: rev_evaluation_fn,
+      equation: equation,
+      op: op
     }
   end
 
-  def solve_ordered(values, [], _, _), do: {:error, values}
+  def solve_ordered(values, [], _, _, _), do: {:error, values}
 
-  def solve_ordered(values = %{}, [next | rest], rulemap = %{}, goal) do
-    # IO.inspect(binding(), label: "82")
-
-    {:ok, next_values} = Map.get(rulemap, next).eval.(values)
-    check_solve_ordered(next_values, rest, rulemap, goal)
+  def solve_ordered(values = %{}, [next | rest], rulemap = %{}, goal, eval_fn_name) do
+    {:ok, next_values} = Map.get(rulemap, next)[eval_fn_name].(values, next)
+    check_solve_ordered(next_values, rest, rulemap, goal, eval_fn_name)
   end
 
-  def check_solve_ordered(values, topo, lookup, goal) do
+  def check_solve_ordered(values, topo, lookup, goal, eval_fn_name) do
     if Map.has_key?(values, goal) do
       {:ok, Map.get(values, goal), values}
     else
-      solve_ordered(values, topo, lookup, goal)
+      solve_ordered(values, topo, lookup, goal, eval_fn_name)
     end
   end
 
   @root "root"
   @me "humn"
 
-  def part2a(input) do
+  def part2(input) do
     lookup =
       input
       |> String.split("\n", trim: true)
@@ -104,7 +166,7 @@ defmodule Solution do
       |> Enum.into(%{}, &{&1.tag, &1})
 
     root_rule = Map.get(lookup, @root)
-    [a, b] = root_rule.inputs |> IO.inspect(label: "105")
+    [a_root, b_root] = root_rule.inputs |> IO.inspect(label: "105")
 
     lookup = Map.delete(lookup, @root)
     lookup = Map.delete(lookup, @me)
@@ -115,108 +177,71 @@ defmodule Solution do
     g = Graph.new() |> Graph.add_edges(edges)
     g_rev = Graph.new() |> Graph.add_edges(edges_rev)
 
-    Graph.is_cyclic?(g) |> IO.inspect(label: "118")
-    Graph.is_cyclic?(g_rev) |> IO.inspect(label: "119")
+    Graph.reachable(g, [@me]) |> IO.inspect(label: "118")
+    Graph.reachable(g_rev, [@me]) |> IO.inspect(label: "119")
 
     forward_topsort = Graph.topsort(g) |> IO.inspect(label: "116") |> tl()
     root_input_a = List.last(forward_topsort)
-    root_input_b = if root_input_a == a, do: b, else: a
+    root_input_b = if root_input_a == a_root, do: b_root, else: a_root
     backward_topsort = Graph.topsort(g_rev) |> IO.inspect(label: "119")
 
+    a_reachable =
+      [a_root | Graph.reachable_neighbors(g_rev, [a_root])]
+      |> MapSet.new()
+      |> IO.inspect(label: "106")
+
+    b_reachable =
+      [b_root | Graph.reachable_neighbors(g_rev, [b_root])]
+      |> MapSet.new()
+      |> IO.inspect(label: "107")
+
+    {first_goal, complement, forward_nodes, backward_nodes} =
+      cond do
+        MapSet.member?(a_reachable, @me) -> {b_root, a_root, b_reachable, a_reachable}
+        MapSet.member?(b_reachable, @me) -> {a_root, b_root, a_reachable, b_reachable}
+        true -> raise "whaaaaa"
+      end
+      |> IO.inspect(label: "142")
+
+    forward_pared_edges =
+      Enum.filter(edges, fn {a, b} ->
+        MapSet.member?(forward_nodes, a) or MapSet.member?(forward_nodes, b)
+      end)
+      |> IO.inspect(label: "148")
+
+    g_forward = Graph.new() |> Graph.add_edges(forward_pared_edges)
+
+    backward_pared_edges =
+      Enum.filter(edges_rev, fn {a, b} ->
+        MapSet.member?(backward_nodes, a) or MapSet.member?(backward_nodes, b)
+      end)
+
+    g_backward = Graph.new() |> Graph.add_edges(backward_pared_edges) |> IO.inspect(label: "158")
+
+    forward_topsorted =
+      case Graph.topsort(g_forward) do
+        false ->
+          raise "could not topsort"
+
+        order ->
+          order
+      end
+      |> IO.inspect(label: "170")
+
+    backward_topsorted =
+      case Graph.topsort(g_backward) do
+        false ->
+          raise "could not topsort"
+
+        order ->
+          order
+      end
+      |> IO.inspect(label: "182")
+
     %{}
-    |> solve_ordered(forward_topsort, lookup, root_input_a)
-    |> then(fn {:ok, value, values} -> Map.put(values, root_input_b, value) end)
-    |> solve_ordered(backward_topsort, lookup, @me)
-
-    # a_reachable =
-    #   [a | Graph.reachable_neighbors(g_rev, [a])] |> MapSet.new() |> IO.inspect(label: "106")
-
-    # b_reachable =
-    #   [b | Graph.reachable_neighbors(g_rev, [b])] |> MapSet.new() |> IO.inspect(label: "107")
-
-    # {first_goal, complement, forward_nodes, backward_nodes} =
-    #   cond do
-    #     MapSet.member?(a_reachable, @me) -> {b, a, b_reachable, a_reachable}
-    #     MapSet.member?(b_reachable, @me) -> {a, b, a_reachable, b_reachable}
-    #     true -> raise "whaaaaa"
-    #   end
-
-    # forward_pared_edges =
-    #   Enum.filter(edges, fn {a, b} ->
-    #     MapSet.member?(forward_nodes, a) or MapSet.member?(forward_nodes, a)
-    #   end)
-
-    # g_forward = Graph.new() |> Graph.add_edges(forward_pared_edges)
-
-    # backward_pared_edges =
-    #   Enum.filter(edges_rev, fn {a, b} ->
-    #     MapSet.member?(backward_nodes, a) or MapSet.member?(backward_nodes, a)
-    #   end)
-
-    # g_backward = Graph.new() |> Graph.add_edges(backward_pared_edges)
-
-    # forward_topsorted =
-    #   case Graph.topsort(g_forward) do
-    #     false ->
-    #       # x = Graph.reachable_neighbors(g_rev, [@root])
-    #       # {length(x), x, Enum.member?(x, :root)} |> IO.inspect(label: "38")
-    #       raise "1"
-
-    #     order ->
-    #       order
-    #   end
-
-    # backward_topsorted =
-    #   case Graph.topsort(g_backward) do
-    #     false ->
-    #       # x = Graph.reachable_neighbors(g_rev, [@root])
-    #       # {length(x), x, Enum.member?(x, :root)} |> IO.inspect(label: "38")
-    #       raise "1"
-
-    #     order ->
-    #       order
-    #   end
-
-    # %{}
-    # |> solve_ordered(forward_topsorted, lookup, first_goal)
-    # |> then(fn {:ok, value, values} -> Map.put(values, complement, value) end)
-    # |> solve_ordered(backward_topsorted, lookup, @me)
-  end
-
-  def part2(input) do
-    lookup =
-      input
-      |> String.split("\n", trim: true)
-      |> Enum.map(fn line ->
-        [key, fill] = String.split(line, ":", trim: true)
-
-        if key == "root" do
-          {key, String.replace(fill, "+", "=")}
-        else
-          {key, fill}
-        end
-      end)
-      |> Enum.into(%{})
-      |> Map.put(@me, "x")
-
-    build_from_root(lookup["root"], lookup)
-  end
-
-  def build_from_root(string, lookup) do
-    if not String.match?(string, ~r/\b([a-zA-Z]{4})\b/) do
-      string
-    else
-      string
-      |> String.split(~r/\b([a-zA-Z]{4})\b/, include_captures: true)
-      |> Enum.map_join("", fn part ->
-        if Map.has_key?(lookup, part) do
-          "(#{Map.get(lookup, part)})"
-        else
-          part
-        end
-      end)
-      |> build_from_root(lookup)
-    end
+    |> solve_ordered(forward_topsorted, lookup, first_goal, :eval)
+    |> then(fn {:ok, value, values} -> Map.put(values, complement, value) end)
+    |> solve_ordered(backward_topsorted, lookup |> IO.inspect(label: "188"), @me, :eval_rev)
   end
 end
 
@@ -232,10 +257,10 @@ Solution.read_input()
 end)
 |> IO.inspect(label: "input part 1")
 
-# Solution.read_example()
-# |> Solution.part2()
-# |> then(fn {:ok, result} -> if result != 3348, do: IO.puts("#{result}"), else: result end)
-# |> IO.inspect(label: "example part 2")
+Solution.read_example()
+|> Solution.part2()
+|> then(fn {:ok, result} -> if result != 3348, do: IO.puts("#{result}"), else: result end)
+|> IO.inspect(label: "example part 2")
 
 Solution.read_input()
 |> Solution.part2()
