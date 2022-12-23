@@ -41,7 +41,7 @@ defmodule Solution do
           raise "1"
       end
 
-    solve_ordered(%{}, topsorted, lookup, "root", :eval)
+    solve_ordered(%{}, topsorted, lookup, "root")
   end
 
   def to_rule(line) do
@@ -57,7 +57,9 @@ defmodule Solution do
 
     equation = String.replace(line, ":", "=")
 
-    evaluation_fn = fn values, _current_monkey ->
+    ## TODO: combine all of the
+
+    evaluation_fn = fn values, current_monkey ->
       input_binding = Enum.map(inputs, fn input -> {String.to_atom(input), values[input]} end)
 
       case Enum.filter(input_binding, &(elem(&1, 1) == nil)) do
@@ -134,7 +136,6 @@ defmodule Solution do
       tag: tag,
       inputs: inputs,
       eval: evaluation_fn,
-      eval_rev: rev_evaluation_fn,
       equation: equation,
       op: op
     }
@@ -142,16 +143,16 @@ defmodule Solution do
 
   def solve_ordered(values, [], _, _, _), do: {:error, values}
 
-  def solve_ordered(values = %{}, [next | rest], rulemap = %{}, goal, eval_fn_name) do
-    {:ok, next_values} = Map.get(rulemap, next)[eval_fn_name].(values, next)
+  def solve_ordered(values = %{}, [next | rest], rulemap = %{}, goal) do
+    {:ok, next_values} = Map.get(rulemap, next).eval.(values, next)
     check_solve_ordered(next_values, rest, rulemap, goal, eval_fn_name)
   end
 
-  def check_solve_ordered(values, topo, lookup, goal, eval_fn_name) do
+  def check_solve_ordered(values, topo, lookup, goal) do
     if Map.has_key?(values, goal) do
       {:ok, Map.get(values, goal), values}
     else
-      solve_ordered(values, topo, lookup, goal, eval_fn_name)
+      solve_ordered(values, topo, lookup, goal)
     end
   end
 
@@ -209,16 +210,16 @@ defmodule Solution do
       end)
       |> IO.inspect(label: "148")
 
-    g_forward = Graph.new() |> Graph.add_edges(forward_pared_edges)
+    g_complete = Graph.new() |> Graph.add_edges(forward_pared_edges)
 
     backward_pared_edges =
       Enum.filter(edges_rev, fn {a, b} ->
         MapSet.member?(backward_nodes, a) or MapSet.member?(backward_nodes, b)
       end)
 
-    g_backward = Graph.new() |> Graph.add_edges(backward_pared_edges) |> IO.inspect(label: "158")
+    g_complete = g_complete |> Graph.add_edges([{first_goal, complement} | backward_pared_edges])
 
-    forward_topsorted =
+    topsorted =
       case Graph.topsort(g_forward) do
         false ->
           raise "could not topsort"
@@ -228,20 +229,7 @@ defmodule Solution do
       end
       |> IO.inspect(label: "170")
 
-    backward_topsorted =
-      case Graph.topsort(g_backward) do
-        false ->
-          raise "could not topsort"
-
-        order ->
-          order
-      end
-      |> IO.inspect(label: "182")
-
-    %{}
-    |> solve_ordered(forward_topsorted, lookup, first_goal, :eval)
-    |> then(fn {:ok, value, values} -> Map.put(values, complement, value) end)
-    |> solve_ordered(backward_topsorted, lookup |> IO.inspect(label: "188"), @me, :eval_rev)
+    solve_ordered(%{}, forward_topsorted, lookup, first_goal)
   end
 end
 
