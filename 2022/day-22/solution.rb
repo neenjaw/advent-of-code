@@ -27,4 +27,4 @@ solution = Solution.new(input, :flat)
 
 puts solution.to_s
 
-# solution = Solution.new(input, :cuboid)
+solution = Solution.new(input, :cuboid)

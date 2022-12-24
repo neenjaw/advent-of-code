@@ -75,6 +75,27 @@ class Board
     end
   end
 
+  def find_cuboidal_connections
+    (0...tile_neighbors.size).each do |y|
+      (0...tile_neighbors[y].size).each do |x|
+        %i[up down left right].each do |d|
+          next if tile_neighbors[y][x].nil? || tile_neighbors[y][x] == :blank
+
+          _, tile = tile_neighbors[y][x]
+          found_tile, found_orientation = find_cuboidal_neighbor(d, [y, x])
+
+          c = Connection.new(tile, found_tile, tile.position, found_tile.position, :up, found_orientation)
+
+          tile.set_connection(d, c)
+        end
+      end
+    end
+  end
+
+  def find_cuboidal_connections(direction, positio)
+
+  end
+
   def find_flat_connections
     (0...tile_neighbors.size).each do |y|
       (0...tile_neighbors[y].size).each do |x|
@@ -124,7 +145,7 @@ class Board
   def to_s
     <<~END_STRING
       Layout:
-      #{tile_neighbors.map {|row| row.map { |n| n == :blank ? '.' : n[1].label }.join("") }.join("\n")}
+      #{tile_neighbors.map { |row| row.map { |n| n == :blank ? '.' : n[1].label }.join('') }.join("\n")}
 
       #{tiles.values.map(&:to_s).join("\n")}
     END_STRING
