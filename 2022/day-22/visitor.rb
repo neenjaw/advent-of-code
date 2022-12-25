@@ -167,38 +167,34 @@ class CuboidVisitor < Visitor
       state.rel_position.x = board.tile_dimension - 1 - state.rel_position.y
       state.rel_position.y = 0
       state.rel_position.heading = 1
-    # when [:right, 0, 180]
-    #   state.rel_position.x = board.tile_dimension - 1
-    #   state.rel_position.y = board.tile_dimension - 1 - state.rel_position.y
-    #   state.rel_position.heading = 2
-    # when [:right, 0, 90]
-    #   state.rel_position.x = state.rel_position.y
-    #   state.rel_position.y = board.tile_dimension - 1
-    #   state.rel_position.heading = 3
+    when [:right, 0, 180]
+      state.rel_position.x = board.tile_dimension - 1
+      state.rel_position.y = board.tile_dimension - 1 - state.rel_position.y
+      state.rel_position.heading = 2
+    when [:right, 0, 90]
+      state.rel_position.x = state.rel_position.y
+      state.rel_position.y = board.tile_dimension - 1
+      state.rel_position.heading = 3
     when [:down, 0, 180]
       state.rel_position.x = board.tile_dimension - 1 - state.rel_position.x
       state.rel_position.y = board.tile_dimension - 1
       state.rel_position.heading = 3
-    # when [:down, 0, 270]
-    #   state.rel_position.x = board.tile_dimension - 1
-    #   state.rel_position.y = state.rel_position.x
-    #   state.rel_position.heading = 2
-    # when [:left, 0, 90]
-    #   state.rel_position.x = state.rel_position.y
-    #   state.rel_position.y = 0
-    #   state.rel_position.heading = 1
-    # when [:left, 0, 180]
-    #   state.rel_position.x = 0
-    #   state.rel_position.y = board.tile_dimension - 1 - state.rel_position.y
-    #   state.rel_position.heading = 0
-    # when [:up, 0, 90]
-    #   state.rel_position.y = board.tile_dimension - 1 - state.rel_position.x
-    #   state.rel_position.x = board.tile_dimension - 1
-    #   state.rel_position.heading = 2
+    when [:down, 0, 270]
+      state.rel_position.y = state.rel_position.x
+      state.rel_position.x = board.tile_dimension - 1
+      state.rel_position.heading = 2
+    when [:left, 0, 90]
+      state.rel_position.x = state.rel_position.y
+      state.rel_position.y = 0
+      state.rel_position.heading = 1
+    when [:left, 0, 180]
+      state.rel_position.x = 0
+      state.rel_position.y = board.tile_dimension - 1 - state.rel_position.y
+      state.rel_position.heading = 0
     when [:up, 0, 270]
       state.rel_position.y = state.rel_position.x
       state.rel_position.x = 0
-      state.rel_position.heading = 1
+      state.rel_position.heading = 0
     else
       pp [transition_direction, conn.from.label, conn.to.label, state.tile.connections[transition_direction].to.position]
       raise "not implemented rotation of #{conn.from_orientation} to #{conn.to_orientation}"

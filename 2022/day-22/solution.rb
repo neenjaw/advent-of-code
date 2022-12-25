@@ -46,6 +46,7 @@ puts solution.to_s
 
 p solution.solve
 
-
+# 103027 WAY OFF
 # 133028 TOO LOW
 # 144212 TOO HIGH
+
