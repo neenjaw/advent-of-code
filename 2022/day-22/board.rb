@@ -5,7 +5,7 @@ require_relative 'connection'
 require_relative 'position'
 
 class Board
-  attr_reader :whole, :tile_neighbors, :tiles
+  attr_reader :whole, :tile_neighbors, :tiles, :index, :tile_dimension
 
   def initialize(input, type)
     @whole = input.chomp.split("\n").map(&:chars)
@@ -13,6 +13,7 @@ class Board
     @tile_dimension = @whole.map(&:size).reduce(&:gcd)
 
     @tiles = {}
+    @index = {}
     @tile_neighbors = []
 
     cut_tiles
@@ -61,7 +62,10 @@ class Board
       end
     end
 
-    @tiles[[y, x]] = Tile.new([y, x], grid, @tiles.size + 1)
+    tile = Tile.new([y, x], grid, @tiles.size + 1)
+
+    @tiles[tile.position] = tile
+    @index[tile.label] = tile
   end
 
   def find_connections(type)
@@ -69,7 +73,7 @@ class Board
     when :flat
       find_flat_connections
     when :cuboid
-      raise 'not implemented'
+      find_cuboidal_connections
     else
       raise 'not supported'
     end
@@ -84,7 +88,7 @@ class Board
           _, tile = tile_neighbors[y][x]
           found_tile, found_orientation = find_cuboidal_neighbor(d, [y, x])
 
-          c = Connection.new(tile, found_tile, tile.position, found_tile.position, :up, found_orientation)
+          c = Connection.new(tile, found_tile, tile.position, found_tile.position, 0, found_orientation)
 
           tile.set_connection(d, c)
         end
@@ -92,8 +96,92 @@ class Board
     end
   end
 
-  def find_cuboidal_connections(direction, positio)
+  def find_cuboidal_neighbor(direction, position)
+    mapping =
+      case tile_dimension
+      when 4
+        {
+          [0, 2] => {
+            up: [index[2], 180],
+            right: [index[6], 180],
+            left: [index[3], 90],
+            down: [index[4], 0]
+          },
+          [1, 0] => {
+            up: [index[1], 180],
+            right: [index[3], 0],
+            left: [index[6], 270],
+            down: [index[5], 180]
+          },
+          [1, 1] => {
+            up: [index[1], 270],
+            right: [index[4], 0],
+            left: [index[2], 0],
+            down: [index[5], 90]
+          },
+          [1, 2] => {
+            up: [index[1], 0],
+            right: [index[6], 270],
+            left: [index[3], 0],
+            down: [index[5], 0]
+          },
+          [2, 2] => {
+            up: [index[4], 0],
+            right: [index[6], 0],
+            left: [index[3], 270],
+            down: [index[2], 180]
+          },
+          [2, 3] => {
+            up: [index[4], 90],
+            right: [index[1], 180],
+            left: [index[5], 0],
+            down: [index[2], 90]
+          }
+        }
+      when 50
+        {
+          [0, 1] => {
+            up: [index[6], 270],
+            right: [index[2], 0],
+            left: [index[4], 180],
+            down: [index[3], 0]
+          },
+          [0, 2] => {
+            up: [index[6], 0],
+            right: [index[5], 180],
+            left: [index[1], 0],
+            down: [index[3], 270]
+          },
+          [1, 1] => {
+            up: [index[1], 0],
+            right: [index[2], 90],
+            left: [index[4], 90],
+            down: [index[5], 0]
+          },
+          [2, 0] => {
+            up: [index[3], 270],
+            right: [index[5], 0],
+            left: [index[1], 180],
+            down: [index[6], 0]
+          },
+          [2, 1] => {
+            up: [index[3], 0],
+            right: [index[2], 180],
+            left: [index[4], 0],
+            down: [index[6], 270]
+          },
+          [3, 0] => {
+            up: [index[4], 0],
+            right: [index[5], 90],
+            left: [index[1], 90],
+            down: [index[2], 0]
+          }
+        }
+      else
+        raise 'unknown dimension'
+      end
 
+    mapping[position][direction]
   end
 
   def find_flat_connections
@@ -105,7 +193,7 @@ class Board
           _, tile = tile_neighbors[y][x]
           found_tile = flat_find_tile(d, [y, x])
 
-          c = Connection.new(tile, found_tile, tile.position, found_tile.position, :up, :up)
+          c = Connection.new(tile, found_tile, tile.position, found_tile.position, 0, 0)
 
           tile.set_connection(d, c)
         end
