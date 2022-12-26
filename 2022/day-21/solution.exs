@@ -14,243 +14,142 @@ defmodule Solution do
   end
 
   def part1(input) do
-    rules =
-      input
-      |> String.split("\n", trim: true)
-      |> Enum.map(&to_rule/1)
-
-    lookup = Enum.into(rules, %{}, &{&1.tag, &1})
-
-    edges = Enum.flat_map(rules, fn rule -> Enum.map(rule.inputs, &{&1, rule.tag}) end)
-
-    g = Graph.new() |> Graph.add_edges(edges)
-
-    topsorted =
-      case Graph.topsort(g) do
-        order = [:root | _] ->
-          Enum.reverse(order)
-
-        order when is_list(order) ->
-          order
-
-        false ->
-          edges_rev = Enum.map(edges, fn {a, b} -> {b, a} end)
-          g_rev = Graph.new() |> Graph.add_edges(edges_rev)
-          x = Graph.reachable_neighbors(g_rev, [:root])
-          {length(x), x, Enum.member?(x, :root)} |> IO.inspect(label: "38")
-          raise "1"
-      end
-
-    solve_ordered(%{}, topsorted, lookup, "root")
+    input
+    |> parse()
+    |> solve()
   end
 
-  def to_rule(line) do
-    [tag | inputs] =
-      Regex.scan(~r/\b([a-zA-Z]+)\b/, line)
-      |> Enum.map(&hd/1)
+  @doc """
+  Parse creates a graph from the input equations, where the formats:
 
-    op =
-      case Regex.scan(~r/([+\/*-])/, line) do
-        [] -> nil
-        [[op | _]] -> op
+    aaaa: bbbb + cccc
+
+  or
+
+    dddd: 5
+
+  become vertices named by the left hand portion of the `:` and the content of the equation as
+  part of the label.  This is used later to evaluate them in order using topological sort to
+  find the answer of the value.
+  """
+  def parse(input) do
+    input
+    |> String.split("\n")
+    |> Enum.reduce(Graph.new(), fn line, graph ->
+      ~r/((\w+): (\d+))|((\w+): (\w+) (\+|\-|\*|\/) (\w+))/
+      |> Regex.run(line, capture: :all_but_first)
+      |> case do
+        [_, _, _, _, label, left, op, right] ->
+          graph
+          |> Graph.add_edge(left, label)
+          |> Graph.add_edge(right, label)
+          |> Graph.label_vertex(label, {left, String.to_existing_atom(op), right})
+
+        [_, label, n] ->
+          graph
+          |> Graph.add_vertex(label)
+          |> Graph.label_vertex(label, {label, String.to_integer(n)})
       end
-
-    equation = String.replace(line, ":", "=")
-
-    ## TODO: combine all of the
-
-    evaluation_fn = fn values, current_monkey ->
-      input_binding = Enum.map(inputs, fn input -> {String.to_atom(input), values[input]} end)
-
-      case Enum.filter(input_binding, &(elem(&1, 1) == nil)) do
-        [] ->
-          {_, binding} = Code.eval_string(equation, input_binding)
-
-          {:ok,
-           Map.merge(
-             values,
-             Enum.into(binding, %{}, fn {key, v} -> {Atom.to_string(key), trunc(v)} end)
-           )}
-
-        l ->
-          {:value_missing, length(l), tag, l, equation, values}
-      end
-    end
-
-    rev_evaluation_fn = fn values, current_monkey ->
-      case op do
-        nil ->
-          {:ok,
-           Map.merge(
-             values,
-             Enum.into(binding, %{}, fn {key, v} -> {Atom.to_string(key), trunc(v)} end)
-           )}
-
-        _ ->
-          [l_value, r_value] = inputs
-
-          rev_equation =
-            case {current_monkey, tag, l_value, op, r_value} do
-              {c, t, c, "+", r} ->
-                {c, t, "-", r}
-
-              {c, t, l, "+", c} ->
-                {c, t, "-", l}
-
-              {c, t, c, "-", r} ->
-                {c, t, "+", r}
-
-              {c, t, l, "-", c} ->
-                {c, l, "-", t}
-
-              {c, t, c, "*", r} ->
-                {c, t, "/", r}
-
-              {c, t, l, "*", c} ->
-                {c, t, "/", l}
-
-              {c, t, c, "/", r} ->
-                {c, t, "*", r}
-
-              {c, t, l, "/", c} ->
-                {c, l, "*", t}
-            end
-            |> then(fn {out, l, op, r} -> "#{out} = #{l} #{op} #{r}" end)
-
-          input_binding =
-            Enum.map([tag | inputs] -- [current_monkey], fn input ->
-              {String.to_atom(input), values[input]}
-            end)
-
-          {_, binding} = Code.eval_string(rev_equation, input_binding)
-
-          {:ok,
-           Map.merge(
-             values,
-             Enum.into(binding, %{}, fn {key, v} -> {Atom.to_string(key), trunc(v)} end)
-           )}
-      end
-    end
-
-    %{
-      tag: tag,
-      inputs: inputs,
-      eval: evaluation_fn,
-      equation: equation,
-      op: op
-    }
+    end)
   end
 
-  def solve_ordered(values, [], _, _, _), do: {:error, values}
-
-  def solve_ordered(values = %{}, [next | rest], rulemap = %{}, goal) do
-    {:ok, next_values} = Map.get(rulemap, next).eval.(values, next)
-    check_solve_ordered(next_values, rest, rulemap, goal, eval_fn_name)
+  def solve(graph) do
+    order = Graph.topsort(graph)
+    root = List.last(order)
+    Enum.reduce(order, %{}, &do_solve(graph, &1, &2))[root]
   end
 
-  def check_solve_ordered(values, topo, lookup, goal) do
-    if Map.has_key?(values, goal) do
-      {:ok, Map.get(values, goal), values}
-    else
-      solve_ordered(values, topo, lookup, goal)
-    end
+  def do_solve(graph, label, prev) do
+    res =
+      case Graph.vertex_labels(graph, label) do
+        [{l, op, r}] -> exec(op, prev[l], prev[r])
+        [{_, n}] -> n
+      end
+
+    Map.put(prev, label, res)
   end
 
-  @root "root"
-  @me "humn"
+  def exec(:+, l, r), do: l + r
+  def exec(:-, l, r), do: l - r
+  def exec(:*, l, r), do: l * r
+  def exec(:/, l, r), do: div(l, r)
 
   def part2(input) do
-    lookup =
-      input
-      |> String.split("\n", trim: true)
-      |> Enum.map(&to_rule/1)
-      |> Enum.into(%{}, &{&1.tag, &1})
+    graph = parse(input)
+    {humn, other} = split(graph, "root")
+    answer = solve(other)
 
-    root_rule = Map.get(lookup, @root)
-    [a_root, b_root] = root_rule.inputs |> IO.inspect(label: "105")
+    path = graph |> Graph.get_shortest_path("humn", "root") |> Enum.reverse()
 
-    lookup = Map.delete(lookup, @root)
-    lookup = Map.delete(lookup, @me)
-
-    edges = Enum.flat_map(lookup, fn {_, rule} -> Enum.map(rule.inputs, &{&1, rule.tag}) end)
-    edges_rev = Enum.map(edges, fn {a, b} -> {b, a} end)
-
-    g = Graph.new() |> Graph.add_edges(edges)
-    g_rev = Graph.new() |> Graph.add_edges(edges_rev)
-
-    Graph.reachable(g, [@me]) |> IO.inspect(label: "118")
-    Graph.reachable(g_rev, [@me]) |> IO.inspect(label: "119")
-
-    forward_topsort = Graph.topsort(g) |> IO.inspect(label: "116") |> tl()
-    root_input_a = List.last(forward_topsort)
-    root_input_b = if root_input_a == a_root, do: b_root, else: a_root
-    backward_topsort = Graph.topsort(g_rev) |> IO.inspect(label: "119")
-
-    a_reachable =
-      [a_root | Graph.reachable_neighbors(g_rev, [a_root])]
-      |> MapSet.new()
-      |> IO.inspect(label: "106")
-
-    b_reachable =
-      [b_root | Graph.reachable_neighbors(g_rev, [b_root])]
-      |> MapSet.new()
-      |> IO.inspect(label: "107")
-
-    {first_goal, complement, forward_nodes, backward_nodes} =
-      cond do
-        MapSet.member?(a_reachable, @me) -> {b_root, a_root, b_reachable, a_reachable}
-        MapSet.member?(b_reachable, @me) -> {a_root, b_root, a_reachable, b_reachable}
-        true -> raise "whaaaaa"
-      end
-      |> IO.inspect(label: "142")
-
-    forward_pared_edges =
-      Enum.filter(edges, fn {a, b} ->
-        MapSet.member?(forward_nodes, a) or MapSet.member?(forward_nodes, b)
-      end)
-      |> IO.inspect(label: "148")
-
-    g_complete = Graph.new() |> Graph.add_edges(forward_pared_edges)
-
-    backward_pared_edges =
-      Enum.filter(edges_rev, fn {a, b} ->
-        MapSet.member?(backward_nodes, a) or MapSet.member?(backward_nodes, b)
-      end)
-
-    g_complete = g_complete |> Graph.add_edges([{first_goal, complement} | backward_pared_edges])
-
-    topsorted =
-      case Graph.topsort(g_forward) do
-        false ->
-          raise "could not topsort"
-
-        order ->
-          order
-      end
-      |> IO.inspect(label: "170")
-
-    solve_ordered(%{}, forward_topsorted, lookup, first_goal)
+    humn
+    |> Graph.add_vertex("root", {"root", answer})
+    |> Graph.delete_vertex("humn")
+    |> reverse_path(path)
+    |> solve()
   end
+
+  @doc """
+  Split the super-graph at the node "root" such that you have two graphs. One that
+  contains "humn" one that doesn't  Not sure if the resulting subgraph is provably
+  disjoint, but that doesn't seem to matter.
+  """
+  def split(graph, root) do
+    graph
+    |> Graph.delete_vertex(root)
+    |> Graph.components()
+    |> Enum.split_with(&("humn" in &1))
+    |> Tuple.to_list()
+    |> Enum.map(fn [vs] -> Graph.subgraph(graph, vs) end)
+    |> List.to_tuple()
+  end
+
+  @doc """
+  Reverse the graph such that the edges are repointed backwards
+  Also the equations need to be reconfigured so that the new node is the result
+  of the equation.
+  """
+  def reverse_path(graph, path) do
+    path
+    |> Enum.chunk_every(3, 1, :discard)
+    |> Enum.reduce(graph, fn [from, to, next], graph ->
+      [op] = Graph.vertex_labels(graph, to)
+
+      graph
+      |> Graph.add_edge(from, to)
+      |> Graph.delete_edge(to, from)
+      |> Graph.remove_vertex_labels(to)
+      |> Graph.label_vertex(to, reorder_equation(op, from, next))
+    end)
+  end
+
+  def reorder_equation({next, :+, other}, from, next), do: {from, :-, other}
+  def reorder_equation({other, :+, next}, from, next), do: {from, :-, other}
+  def reorder_equation({next, :-, other}, from, next), do: {other, :+, from}
+  def reorder_equation({other, :-, next}, from, next), do: {other, :-, from}
+  def reorder_equation({next, :*, other}, from, next), do: {from, :/, other}
+  def reorder_equation({other, :*, next}, from, next), do: {from, :/, other}
+  def reorder_equation({next, :/, other}, from, next), do: {from, :*, other}
+  def reorder_equation({other, :/, next}, from, next), do: {other, :/, from}
 end
 
 Solution.read_example()
 |> Solution.part1()
-|> then(fn {:ok, result, _} -> if result != 152, do: raise("#{result}"), else: result end)
+|> then(fn result -> if result != 152, do: raise("#{result}"), else: result end)
 |> IO.inspect(label: "example part 1")
 
 Solution.read_input()
 |> Solution.part1()
-|> then(fn {:ok, result, _} ->
+|> then(fn result ->
   if result != 93_813_115_694_560, do: raise("#{result}"), else: result
 end)
 |> IO.inspect(label: "input part 1")
 
 Solution.read_example()
 |> Solution.part2()
-|> then(fn {:ok, result} -> if result != 3348, do: IO.puts("#{result}"), else: result end)
+|> then(fn result -> if result != 301, do: IO.puts("#{result}"), else: result end)
 |> IO.inspect(label: "example part 2")
 
 Solution.read_input()
 |> Solution.part2()
-# |> then(fn {:ok, result} -> if result != 3510, do: raise("#{result}"), else: result end)
-|> IO.puts()
+|> then(fn result -> if result != 3_910_938_071_092, do: raise("#{result}"), else: result end)
+|> IO.inspect(label: "input part 2")
