@@ -2,6 +2,12 @@
 
 class Day02b
   def run(input)
+    parse_input(input).map do |game|
+      calculate_score(game)
+    end.sum
+  end
+
+  def parse_input(input)
     input.split("\n").map do |line|
       parts = line.split(/: |; /)
       parts.shift
@@ -15,8 +21,10 @@ class Day02b
           acc
         end
       end
-    end.map do |game|
-      game.values.inject(:*)
-    end.sum
+    end
+  end
+
+  def calculate_score(game)
+    game.values.inject(:*)
   end
 end
