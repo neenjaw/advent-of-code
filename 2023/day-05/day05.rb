@@ -75,6 +75,8 @@ end.min
 
 pp least
 
+start_time = Time.now.to_f * 1_000_000
+
 rleast = seeds.split
   .drop(1)
   .map(&:to_i)
@@ -115,11 +117,21 @@ rleast = seeds.split
           [mapped, next_unmapped]
         end
 
+      puts "After round #{map_group.first[:title]}: #{map_group_result.sum(&:size)}"
+
       map_group_result.flatten
+    end
+    .tap do |seed_ranges|
+      compute_time = Time.now.to_f * 1_000_000 - start_time
+      puts "Compute time: #{Time.at((compute_time) / 1_000_000).strftime("%M:%S.%L")}"
+      puts "After round: #{seed_ranges.sum(&:size)} \n\n ------------------ \n\n"
     end
     .min_by(&:begin)
   end
   .min_by(&:begin)
   .begin
+
+total_time = Time.now.to_f * 1_000_000 - start_time
+puts "total time: #{Time.at(total_time / 1_000_000).strftime("%M:%S.%L")}"
 
 pp rleast
