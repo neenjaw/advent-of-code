@@ -1,2 +1,5 @@
 *.nim
 node_modules
+input*
+*.ansi
+.DS_Store
