@@ -25,8 +25,6 @@ end
 
 graph = read
 
-pp graph
-
 graph['bkm'].delete('ldk')
 graph['ldk'].delete('bkm')
 graph['zmq'].delete('pgh')
