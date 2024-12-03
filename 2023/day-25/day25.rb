@@ -8,8 +8,12 @@ require 'set'
 # rendering it with graphviz, and then looking at the image.
 
 def read
+  ARGF.read
+end
+
+def parse_graph(input)
   connections = {}
-  ARGF.read.chomp.split("\n").each_with_index do |line, idx|
+  input.chomp.split("\n").each_with_index do |line, idx|
     line =~ /(\w+): (.*)/
     a, bs = $1, $2.split(' ')
 
@@ -23,14 +27,18 @@ def read
   connections
 end
 
-graph = read
+def delete_edge(graph, a, b)
+  graph[a].delete(b)
+  graph[b].delete(a)
+end
 
-graph['bkm'].delete('ldk')
-graph['ldk'].delete('bkm')
-graph['zmq'].delete('pgh')
-graph['pgh'].delete('zmq')
-graph['bvc'].delete('rsm')
-graph['rsm'].delete('bvc')
+input = read
+
+graph = parse_graph(input)
+
+delete_edge(graph, 'bkm', 'ldk')
+delete_edge(graph, 'zmq', 'pgh')
+delete_edge(graph, 'bvc', 'rsm')
 
 def count_nodes_visited(graph, start)
   visited = Set.new
@@ -54,4 +62,50 @@ end
 a = count_nodes_visited(graph, 'bkm')
 b = count_nodes_visited(graph, 'rsm')
 
-pp a, b, a * b
+puts "a: #{a}"
+puts "b: #{b}"
+puts "a * b: #{a * b}"
+
+def find_bridges(graph)
+  visited = {}
+  disc = {}
+  low = {}
+  parent = {}
+  bridges = []
+
+  graph.keys.each do |node|
+    visited[node] = false
+    disc[node] = Float::INFINITY
+    low[node] = Float::INFINITY
+    parent[node] = nil
+  end
+
+  dfs = lambda do |node, time|
+    visited[node] = true
+    disc[node] = time
+    low[node] = time
+
+    graph[node].each do |neighbor|
+      if !visited[neighbor]
+        parent[neighbor] = node
+        dfs.call(neighbor, time + 1)
+        low[node] = [low[node], low[neighbor]].min
+
+        bridges.push([node, neighbor]) if low[neighbor] > disc[node]
+      elsif neighbor != parent[node]
+        low[node] = [low[node], disc[neighbor]].min
+      end
+    end
+  end
+
+  graph.keys.each do |node|
+    dfs.call(node, 0) unless visited[node]
+  end
+
+  bridges
+end
+
+graph2 = parse_graph(input)
+
+result = find_bridges(graph2)
+puts "Bridges in the graph: #{result}"
