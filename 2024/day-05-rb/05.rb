@@ -43,9 +43,6 @@ productions = data.map do |file, (upper, lower)|
   [file, productions]
 end.to_h
 
-# puts rules['example']
-# puts productions['example']
-
 version = 'input'
 ruleset = rules[version]
 correct, incorrect = productions[version].partition do |production|
@@ -68,7 +65,6 @@ p1 = correct.sum { |production| production[:middle_page].to_i }
 
 p2 = incorrect.sum do |production|
   order = []
-
   page_queue = production[:pages]
   pageset = production[:pageset]
   seen = Set.new
