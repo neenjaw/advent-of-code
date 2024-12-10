@@ -19,8 +19,6 @@ end.to_h
 
 disk_map = data[file]
 
-puts "disk_map: #{disk_map}" if DEBUG
-
 id = 0
 expanded = disk_map.chars.each_with_index.map do |char, i|
   block_type = i % 2 == 0 ? :file : :space
@@ -78,7 +76,6 @@ def p1(drive_map)
 end
 
 drive = p1(expanded)
-puts "p1: #{drive.inspect}" if DEBUG
 ans = drive.each_with_index.sum { |id, i| id * i }
 puts "p1: #{ans}"
 
@@ -134,6 +131,5 @@ def p2(drive_map)
 end
 
 drive = p2(expanded)
-puts "p2: #{drive.inspect}" if DEBUG
 ans = drive.each_with_index.sum { |id, i| id * i }
 puts "p2: #{ans}"
