@@ -1,6 +1,5 @@
 require "set"
 require 'pry'
-require 'memoist'
 require 'matrix'
 
 file = ARGV.find { |arg| arg.start_with?("--source=") }.split("=").last
@@ -67,6 +66,8 @@ end
 
 $memo = {}
 def code_to_path(code, depth = 0, limit = 2)
+  # spacer = ' ' * depth * 4
+  # puts spacer + "code: #{code}, depth: #{depth}"
   memo_key = [code, depth, limit]
   return $memo[memo_key] if $memo[memo_key]
 
@@ -74,9 +75,11 @@ def code_to_path(code, depth = 0, limit = 2)
   control_grid = depth == 0 ? $door_control : $robot_control
   blank_acc = 0
   result = (prefix + code).chars.each_cons(2).inject(blank_acc) do |acc, (c1, c2)|
+    # puts spacer + "c1: #{c1}, c2: #{c2}"
     start = control_grid[c1]
     target = control_grid[c2]
     paths = pathing(start, target, control_grid)
+    # puts spacer + "paths: #{paths.inspect}"
     next acc + paths.first.length if depth >= limit
 
     min_path = paths
@@ -95,6 +98,7 @@ paths = codes.map { |code| [code, code_to_path(code, 0, 2)] }
 x = paths.map do |(code, path)|
   numeric = code[0...-1].to_i
   length = path
+  puts "code: #{code}, numeric: #{numeric}, length: #{length}, calc: #{numeric * length}"
   numeric * length
 end.sum
 
@@ -105,6 +109,7 @@ paths2 = codes.map { |code| [code, code_to_path(code, 0, 25)] }
 x2 = paths2.map do |(code, path)|
   numeric = code[0...-1].to_i
   length = path
+  puts "code: #{code}, numeric: #{numeric}, length: #{length}, calc: #{numeric * length}"
   numeric * length
 end.sum
 
