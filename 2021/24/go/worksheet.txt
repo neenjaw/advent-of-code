@@ -1,0 +1,69 @@
+0
+div z 1     DIV 1
+add x 12    CHECK 12
+add y 6     OFFSET 6
+
+1 w
+div z 1     DIV 1
+add x 10    CHECK 10
+add y 6     OFFSET 6
+
+2 w
+div z 1     DIV 1
+add x 13    CHECK 13
+add y 3     OFFSET 3
+
+3 w
+div z 26    DIV 26
+add x -11   CHECK -11
+add y 11    OFFSET 11
+
+4 w
+div z 1     DIV 26
+add x 13    CHECK 13
+add y 9     OFFSET 9
+
+5 w
+div z 26    DIV 26
+add x -1    CHECK -1
+add y 3     OFFSET 11
+
+6 w
+div z 1     DIV 1
+add x 10    CHECK 10
+add y 13    OFFSET 13
+
+7 w
+div z 1     DIV 1
+add x 11    CHECK 11
+add y 6     OFFSET 6
+
+8 w
+div z 26    DIV 26
+add x 0     CHECK 0
+add y 14    OFFSET 14
+
+9 w
+div z 1     DIV 1
+add x 10    CHECK 10
+add y 10    OFFSET 10
+
+10 w
+div z 26    DIV 26
+add x -5    CHECK -5
+add y 12    OFFSET 12
+
+11 w
+div z 26    DIV 26
+add x -16   CHECK -16
+add y 10    OFFSET 10
+
+12 w
+div z 26    DIV 26
+add x -7    CHECK -7
+add y 11    OFFSET 11
+
+13 w
+div z 26    DIV 26
+add x -11   CHECK -11
+add y 15    OFFSET 15

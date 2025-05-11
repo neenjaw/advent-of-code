@@ -1,0 +1,45 @@
+PUSH input[0] + 6
+PUSH input[1] + 6
+PUSH input[2] + 3
+POP. Must have input[3] == popped_value - 11
+PUSH input[4] + 11
+POP. Must have input[5] == popped_value - 1
+PUSH input[6] + 13
+PUSH input[7] + 6
+POP. Must have input[8] == popped_value - 0
+PUSH input[9] + 10
+POP. Must have input[10] == popped_value - 5
+POP. Must have input[11] == popped_value - 16
+POP. Must have input[12] == popped_value - 7
+POP. Must have input[13] == popped_value - 11
+
+
+
+input[3] == input[2] - 8
+input[5] == input[4] + 8
+input[8] == input[7] + 6
+input[10] == input[9] + 5
+input[11] == input[6] - 3
+input[12] == input[1] - 1
+input[13] == input[0] - 5
+
+
+
+99911993949684
+
+6
+2
+9
+1
+1
+9
+4
+1
+7
+1
+6
+1
+1
+1
+
+62911941716111
