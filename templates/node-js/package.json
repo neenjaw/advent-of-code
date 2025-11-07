@@ -1,0 +1,14 @@
+{
+  "name": "aoc-template-root",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "day": "node ./scripts/run.ts",
+    "test": "node ./scripts/test.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

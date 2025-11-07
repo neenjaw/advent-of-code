@@ -1,0 +1,20 @@
+// tsconfig.json
+{
+  "compilerOptions": {
+    // ESSENTIAL for native Node TS running: enforces syntax Node can strip.
+    "erasableSyntaxOnly": true,
+    // ESSENTIAL for pnpm workspace imports and ESM
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    // Allows importing .ts files directly with extensions (required by Node ESM)
+    "allowImportingTsExtensions": true,
+    // Recommended for clean Node/TS interop
+    "verbatimModuleSyntax": true,
+    // Prevents TSC from generating .js files (Node runs the .ts files)
+    "noEmit": true,
+    "target": "ES2022",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["packages/**/*.ts", "scripts/**/*.ts"]
+}
