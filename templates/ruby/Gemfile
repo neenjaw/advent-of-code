@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# Core dependencies
+gem "zeitwerk"
+gem "rake"
+
+# Testing
+gem "minitest"
+
+# You can add other utilities here, e.g.,
+# gem "pry"

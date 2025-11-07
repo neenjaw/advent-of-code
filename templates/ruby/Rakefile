@@ -1,0 +1,77 @@
+# Rakefile - FINAL REVISION
+require "bundler/setup"
+require "rake"
+require "minitest/test_task"
+require "zeitwerk"
+
+# --- Zeitwerk Setup ---
+loader = Zeitwerk::Loader.new
+loader.push_dir("src")
+loader.setup # Activates the autoloader
+
+# --- Dynamic AoC Solution Tasks ---
+# Define tasks like 'rake day01', 'rake day02', etc., based on files in src/
+
+# Look for files matching 'src/dayXX.rb'
+Dir["src/day[0-9][0-9].rb"].each do |file_path|
+  # Extracts "day01" from "src/day01.rb"
+  day_task_name = File.basename(file_path, ".rb")
+
+  # Define the dynamic task
+  # Command examples: bundle exec rake day01, bundle exec rake day01[custom.txt]
+  desc "Run Advent of Code solution for #{day_task_name}"
+  task day_task_name, [:input_file] do |t, args|
+    # Discard the task name from ARGV
+    ARGV.shift
+
+    # 1. Determine the effective input file path:
+
+    # Check for argument passed via brackets (e.g., rake day01[input.txt])
+    input_file = args[:input_file]
+
+    # Fallback: Check for space-separated argument (e.g., rake day01 input.txt)
+    # ARGV.shift consumes the argument after the task name if present
+    input_file ||= ARGV.shift
+
+    # 2. Set the final path to use for file operations:
+    # If an explicit file was NOT passed, use the default path based on the task name.
+    final_input_path = input_file || "input/#{day_task_name}.txt"
+
+    # 3. Load the input data or fail (Issue 1 fix):
+    unless File.exist?(final_input_path)
+      # Abort instead of reading from STDIN
+      abort "Error: Input file not found at path: #{final_input_path}"
+    end
+
+    input_data = File.read(final_input_path)
+
+    # 4. Execute the solution:
+    # Convert task name (day01) to class name (Day01)
+    class_name = day_task_name.split('_').map(&:capitalize).join
+
+    begin
+      solver_class = Object.const_get(class_name)
+      solver = solver_class.new(input_data)
+
+      puts "--- Advent of Code: #{class_name} ---"
+      puts "Part 1: #{solver.part1}"
+      puts "Part 2: #{solver.part2}"
+
+    rescue NameError
+      abort "Error: Could not find class '#{class_name}'. Check that the class name in src/#{day_task_name}.rb matches the file name."
+    rescue StandardError => e
+      abort "An error occurred during execution: #{e.message}"
+    end
+  end
+end
+
+
+# --- Minitest Rake Task ---
+# Command: bundle exec rake test
+Minitest::TestTask.create(:test) do |t|
+  t.framework = %(require "./Rakefile")
+  t.test_globs = ["test/**/*_test.rb"]
+end
+
+# Make 'test' the default task when running 'rake'
+task :default => :test
