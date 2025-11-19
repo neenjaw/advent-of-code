@@ -1,8 +1,6 @@
 <?php
 
-declare (strict_types = 1);
-
-namespace Aoc\Day01;
+declare(strict_types=1);
 
 class Solution
 {
