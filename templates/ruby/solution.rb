@@ -1,5 +1,4 @@
-# Zeitwerk expects this class name to match the file name (day01.rb -> Day01)
-class Day01
+class Solution
   attr_reader :input_data
 
   def initialize(input_data)

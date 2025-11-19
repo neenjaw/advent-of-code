@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
+# Optional: Only needed if you want to use additional gems
+# The template works fine without this file using only Ruby stdlib!
+
 source "https://rubygems.org"
 
-# Core dependencies
-gem "zeitwerk"
-gem "rake"
-
-# Testing
-gem "minitest"
-
-# You can add other utilities here, e.g.,
-# gem "pry"
+# Uncomment any gems you want to use:
+# gem "pry"        # For debugging
+# gem "pry-byebug" # For step debugging
