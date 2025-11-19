@@ -1,24 +1,23 @@
-// packages/day01/index.test.ts
 import { test, describe, before } from "node:test";
 import * as assert from "node:assert/strict";
-import { readInputLines } from "@aoc/common/index.ts";
+import { readInputLines } from "./utils.ts";
 import solve from "./index.ts";
 import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { dirname, resolve } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const samplePath = __dirname + "/input.txt";
+const samplePath = resolve(__dirname, "input.txt");
 let sampleInput: string[] = [];
 
-describe("Day 01 Solver", async () => {
+describe("Solver", async () => {
   before(async () => {
     sampleInput = await readInputLines(samplePath);
   });
 
   test("Part 1 should return the expected result", async () => {
-    const expectedResult = 4;
+    const expectedResult = 8; // "test" (4) + "line" (4) = 8
 
     const result = await solve(sampleInput);
 

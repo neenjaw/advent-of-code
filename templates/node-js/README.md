@@ -1,53 +1,56 @@
-# 🚀 Advent of Code Template
+# Advent of Code Day Template
 
-Node.js project managed by **mise** (tool versions) and **pnpm** (packages).
+A standalone Node.js template for solving Advent of Code problems.
 
-## 🛠️ Setup
+## Setup
 
-Follow these two steps to set up your environment:
+1. Copy this entire folder to your day folder (e.g., `day01/`, `day02/`, etc.)
+2. Run `npm install` to install dependencies
+3. Edit `index.ts` with your solution
+4. Add your input to `input.txt`
 
-### 1\. Install `mise`
+## Usage
 
-`mise` manages the correct Node.js and pnpm versions.
+### Run your solution
+```bash
+npm start
+# or with a custom input file
+npm start -- sample.txt
+```
 
-* **Install `mise`:** Follow the official installation guide.
-  * *Example (Linux/macOS):*
+### Run tests
+```bash
+npm test
+# or watch mode
+npm run test:watch
+```
 
-    ```bash
-    curl https://mise.run | sh
-    ```
+## File Structure
 
-* **Activate Shell Integration:** Add the activation line to your shell profile (e.g., `.zshrc`) and restart the terminal.
+- `index.ts` - Your solution (exports a default Solver function)
+- `index.test.ts` - Your tests
+- `input.txt` - Your puzzle input
+- `utils.ts` - Common utilities (readInputLines, Solver interface)
+- `scripts/run.ts` - Script to run your solution
+- `package.json` - npm configuration and scripts
+- `tsconfig.json` - TypeScript configuration (uses Node's native TypeScript support)
 
-  ```bash
-  eval "$(mise activate zsh)"
-  ```
+## Requirements
 
-### 2\. Install Project Tools and Dependencies
+- Node.js 20+ (for native TypeScript support)
+- npm
 
-Navigate to the project root and run these commands:
+## Solution Format
 
-* **Install Tools:** `mise` installs the Node.js and pnpm versions specified in `.mise.toml`.
+Your `index.ts` should export a default function that matches the `Solver` interface:
 
-  ```bash
-  mise install
-  ```
+```typescript
+import type { Solver } from "./utils.ts";
 
-* **Install Packages:** `pnpm` installs the project dependencies.
+const solve: Solver = async (input: string[]) => {
+  // Your solution here
+  return { part1: result1, part2: result2 };
+};
 
-  ```bash
-  pnpm install
-  ```
-
------
-
-## ⚙️ How to Run
-
-All operations use the `pnpm` command runner, which utilizes the correct Node.js version provided by `mise`.
-
-### Standard Execution
-
-| Command | Action |
-| :--- | :--- |
-| `pnpm day <dayXX> <input file path>` | Starts the application in **development mode** (if configured). |
-| `pnpm test <dayXX>` | Runs the **project's test suite**. |
+export default solve;
+```

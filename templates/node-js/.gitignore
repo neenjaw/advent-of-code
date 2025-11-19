@@ -1,2 +1,2 @@
-input*.txt
-node_modules
+node_modules/
+input.txt

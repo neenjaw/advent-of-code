@@ -1,7 +1,7 @@
-import type { Solver } from "@aoc/common";
+import type { Solver } from "./utils.ts";
 
 const solve: Solver = async (input: string[]) => {
-  console.log(`Solving Day 1 with ${input.length} lines of input.`);
+  console.log(`Solving with ${input.length} lines of input.`);
 
   // Example: Sum the length of all lines.
   const totalLength = input.reduce((sum, line) => sum + line.length, 0);

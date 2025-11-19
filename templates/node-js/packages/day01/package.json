@@ -1,9 +1,0 @@
-{
-  "name": "@aoc/day01",
-  "version": "1.0.0",
-  "main": "index.ts",
-  "type": "module",
-  "dependencies": {
-    "@aoc/common": "workspace:^"
-  }
-}
