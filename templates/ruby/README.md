@@ -32,7 +32,7 @@ bundle exec rake run
 
 ### File Structure
 
-```
+```text
 day01/
   ├── solution.rb      # Your solution class (Solution)
   ├── solution_test.rb # Tests with sample input in heredoc

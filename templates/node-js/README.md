@@ -12,6 +12,7 @@ A standalone Node.js template for solving Advent of Code problems.
 ## Usage
 
 ### Run your solution
+
 ```bash
 npm start
 # or with a custom input file
@@ -19,6 +20,7 @@ npm start -- sample.txt
 ```
 
 ### Run tests
+
 ```bash
 npm test
 # or watch mode
