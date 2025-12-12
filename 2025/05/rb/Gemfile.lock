@@ -1,0 +1,14 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    range-set (1.0.0)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  range-set (~> 1.0)
+
+BUNDLED WITH
+   2.7.2

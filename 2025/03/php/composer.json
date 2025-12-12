@@ -1,0 +1,19 @@
+{
+  "name": "aoc/day-template",
+  "description": "Advent of Code Day Template",
+  "type": "project",
+  "require-dev": {
+    "phpunit/phpunit": "^12.4"
+  },
+  "license": "MIT",
+  "autoload": {
+    "classmap": [
+      "src"
+    ]
+  },
+  "require": {},
+  "scripts": {
+    "run": "php bin/run.php",
+    "test": "php bin/test.php"
+  }
+}
