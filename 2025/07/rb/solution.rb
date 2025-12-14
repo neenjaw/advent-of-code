@@ -28,9 +28,9 @@ class Solution
 
     def get_neighbors(point)
       case grid_map[point]
-      when BEAM, START
+      in BEAM | START
         [below(point)]
-      when SPLITTER
+      in SPLITTER unless grid_map[above(point)] == SPACE
         sides(point)
       else
         []
@@ -38,8 +38,6 @@ class Solution
     end
 
     grid_map.each do |point, c|
-      next if c == SPLITTER and grid_map[above(point)] == SPACE
-
       get_neighbors(point).each do |n|
         in_degree[n] += 1
       end
