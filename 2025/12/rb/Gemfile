@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+# Optional: Only needed if you want to use additional gems
+# The template works fine without this file using only Ruby stdlib!
+
+source "https://rubygems.org"
+
+# Uncomment any gems you want to use:
+# gem "pry"        # For debugging
+# gem "pry-byebug" # For step debugging
+
+gem "z3"
