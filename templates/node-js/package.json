@@ -1,15 +1,11 @@
 {
   "name": "aoc-day-template",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "start": "node ./scripts/run.ts",
-    "run": "npm start",
-    "test": "node --test index.test.ts",
-    "test:watch": "node --test --watch index.test.ts"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "start": "node ./scripts/run.js",
+    "test": "node --test",
+    "test:watch": "node --test --watch"
   }
 }
