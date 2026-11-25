@@ -1,0 +1,10 @@
+[project]
+name = "aoc-day-template"
+version = "0.1.0"
+description = "A self-contained Advent of Code day solution"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
