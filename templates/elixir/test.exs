@@ -1,29 +1,19 @@
+ExUnit.start()
+
+Code.require_file("solution.exs", __DIR__)
+
 defmodule SolutionTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
-  @input_file "input.txt"
+  test "part 1 with its sample" do
+    input = File.read!(Path.join(__DIR__, "sample_part1.txt"))
 
-  setup do
-    input = Utils.read_input(@input_file)
-    {:ok, input: input}
+    assert Solution.part1(input) == 8
   end
 
-  test "Part 1 should return the expected result", %{input: input} do
-    result = Solution.solve(input)
+  test "part 2 with its sample" do
+    input = File.read!(Path.join(__DIR__, "sample_part2.txt"))
 
-    # Example: "test" (4) + "line" (4) = 8
-    expected_result = 8
-
-    assert result == expected_result,
-           "Part 1 failed: Expected #{expected_result}, got #{result}"
-  end
-
-  test "Part 2 should return the expected result", %{input: input} do
-    result = Solution.solve(input)
-
-    expected_result = "TBD"
-
-    assert result == expected_result,
-           "Part 2 failed: Expected #{expected_result}, got #{result}"
+    assert Solution.part2(input) == 3
   end
 end

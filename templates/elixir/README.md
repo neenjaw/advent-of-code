@@ -1,111 +1,44 @@
-# Advent of Code Day Template (Elixir)
+# Advent of Code template (Elixir)
 
-A lightweight Elixir script template for solving Advent of Code problems.
+This is a dependency-free `.exs` setup. Copy this directory into a day's
+solution folder, add your puzzle input as `input.txt`, and edit `solution.exs`.
+The template was validated with Elixir 1.20.5 on Erlang/OTP 29; no specific
+version manager is required.
 
 ## Setup
 
-1. Copy this entire folder to your day folder (e.g., `day01/`, `day02/`, etc.)
-2. Ensure you have Elixir installed (via `mise` or your preferred method)
-3. Edit `solution.exs` with your solution
-4. Add your input to `input.txt`
+Install Elixir using your preferred package manager or version manager. No Mix
+project, dependency installation, or extra test framework is needed.
 
-## Usage
+## Commands
 
-### Run your solution
+Run from this directory:
 
-```bash
-elixir .scripts/run.exs
-# or with a custom input file
-elixir .scripts/run.exs sample.txt
+```sh
+elixir run.exs                 # reads input.txt
+elixir run.exs sample_part1.txt # use a different input file
+elixir test.exs
 ```
 
-### Run tests
+An input-file path is interpreted relative to the current working directory.
+The default `input.txt` path is relative to `run.exs`. The runner prints
+`Part 1: ...` and, when implemented, `Part 2: ...`.
 
-```bash
-elixir .scripts/test_runner.exs
-```
+## Files
 
-## File Structure
+- `solution.exs` — puzzle logic, with no file I/O or answer printing.
+- `run.exs` — reads input and prints answers.
+- `test.exs` — built-in ExUnit tests.
+- `sample_part1.txt`, `sample_part2.txt` — independent sample fixtures; adjust
+  or add fixtures as needed.
+- `.gitignore` — keeps the personal `input.txt` out of version control.
 
-- `solution.exs` - Your solution (defines a `Solution` module with a `solve/1` function)
-- `test.exs` - Your tests using ExUnit (edit this file with your test cases)
-- `input.txt` - Your puzzle input
-- `.scripts/run.exs` - Script to run your solution with nice output
-- `.scripts/test_runner.exs` - Test runner that loads your test file
-- `.scripts/utils.exs` - Common utilities (read_input_lines, etc.)
-- `mise.toml` - Version management (optional, if using mise)
+## Solution interface
 
-## Requirements
-
-- Elixir 1.19+ (or as specified in `mise.toml`)
-- ExUnit (included with Elixir)
-
-## Solution Format
-
-Your `solution.exs` should define a `Solution` module with a `solve/1` function:
-
-```elixir
-defmodule Solution do
-  def solve(input_lines) do
-    part1 = part1(input_lines)
-    part2 = part2(input_lines)
-
-    %{part1: part1, part2: part2}
-  end
-
-  defp part1(input_lines) do
-    # Your part 1 solution
-  end
-
-  defp part2(input_lines) do
-    # Your part 2 solution
-  end
-end
-```
-
-## Using Hex Dependencies
-
-To use packages from hex.pm, you can use `Mix.install/1` directly in your script (Elixir 1.12+). See the commented example at the top of `.scripts/run.exs`:
-
-```elixir
-Mix.install([
-  {:req, "~> 0.5"}
-])
-```
-
-This will automatically download and install the packages when you run the script - no `mix.exs` or `mix deps.get` needed!
-
-Alternatively, if you prefer a traditional Mix project:
-
-1. Create a `mix.exs` file in the same directory
-2. Run `mix deps.get` to install dependencies
-3. Run your scripts with `mix run solution.exs` or `mix run .scripts/run.exs`
-
-Example `mix.exs`:
-
-```elixir
-defmodule Day01.MixProject do
-  use Mix.Project
-
-  def project do
-    [
-      app: :day01,
-      version: "0.1.0",
-      deps: deps()
-    ]
-  end
-
-  defp deps do
-    [
-      # Add your dependencies here
-      # {:some_dep, "~> 1.0"}
-    ]
-  end
-end
-```
-
-## Notes
-
-- All files use `.exs` (script) extension for easy execution
-- Scripts use `Code.require_file/2` to load dependencies
-- The template is designed to be self-contained and portable
+Define public `Solution.part1/1` and, when the puzzle has a second part,
+`Solution.part2/1`. Each function receives the **raw input string** and returns
+its answer. Keep parsing and puzzle logic in these functions; the runner owns
+file reading and normal output. The runner checks whether `part2/1` exists, so
+remove that function when there is no second part rather than returning a
+placeholder answer. The included implementation is a small working example;
+replace it with the day's puzzle logic.
