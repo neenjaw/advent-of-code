@@ -1,89 +1,56 @@
-# Advent of Code Day Template
+# PHP day template
 
-A lightweight PHP template for solving Advent of Code problems.
-
-## Quick Start
-
-1. **Copy this template folder** into your day folder (e.g., `day01/`, `day02/`, etc.)
-
-2. **Install dependencies:**
-
-   ```bash
-   composer install
-   ```
-
-3. **Run your solution:**
-
-   ```bash
-   composer run input.txt
-   ```
-
-   Or directly: `php bin/run.php input.txt`
-
-4. **Run tests:**
-
-   ```bash
-   composer test
-   ```
-
-   Or directly: `php bin/test.php`
-
-## Files
-
-**Main files (edit these!):**
-
-- `Solution.php` - Your solution class
-- `SolutionTest.php` - Your tests
-- `input.txt` - Your puzzle input (replace with actual input)
-
-**Configuration:**
-
-- `composer.json` - PHP dependencies configuration
-
-**Infrastructure (in `bin/` folder - rarely need to edit):**
-
-- `bin/run.php` - Script to run your solution
-- `bin/test.php` - Script to run tests
-- `bin/phpunit.xml` - PHPUnit test configuration
-- `bin/Utility.php` - Helper utilities (optional, edit as needed)
+Each day is self-contained. The default setup uses PHP scripts and a small
+dependency-free test harness; Composer is optional for days that need packages.
 
 ## Requirements
 
-- PHP 8.5 or newer
-- Composer
+- PHP 8.6.0 is the version used to check this template.
+- No Composer installation is needed for the default setup.
 
-## Usage
+The repository has not set a shared PHP version policy yet. Check your installed
+version with `php --version`.
 
-### Running Solutions
+## Run
 
-Using Composer (recommended):
+From this directory:
 
-```bash
-composer run input.txt
+```sh
+php run.php
+php run.php path/to/input.txt
 ```
 
-Or directly:
+With no path, the runner reads `input.txt` from this directory. The runner reads
+the file and passes its raw contents to `solvePart1()` and `solvePart2()`.
+Solution functions should do puzzle work only; keep file I/O and normal output
+in the runner.
 
-```bash
-php bin/run.php input.txt
+Answers are printed with `Part 1:` and `Part 2:` labels. A `null` result means
+that part is not implemented yet, and is printed as `not implemented`. You can
+remove `solvePart2()` entirely if the puzzle has no second part.
+
+## Test
+
+```sh
+php tests.php
 ```
 
-### Running Tests
+Replace `sample.txt` with the puzzle's sample input. Add or adjust cases in
+`tests.php`, including the expected sample answers for both parts. A `null`
+expected value marks a case as pending; pending cases are reported as skipped.
+Use separate sample files and test cases when the parts need different samples.
 
-Using Composer (recommended):
+## Optional packages
 
-```bash
-composer test
-```
+For a day that needs third-party packages, add a `composer.json` in that day
+directory, install packages there, and keep `vendor/` uncommitted. The runner
+and test harness load `vendor/autoload.php` if it exists. Days that need no
+packages do not need Composer.
 
-Or directly:
+## Files
 
-```bash
-php bin/test.php
-```
-
-Or with PHPUnit directly:
-
-```bash
-vendor/bin/phpunit
-```
+- `Solution.php` — directly testable solution functions; receives raw input.
+- `run.php` — input-file selection, file I/O, and labeled answers.
+- `tests.php` — sample test cases and the lightweight test harness.
+- `sample.txt` — tracked sample fixture; replace its contents as needed.
+- `input.txt` — personal puzzle input; ignored by Git.
