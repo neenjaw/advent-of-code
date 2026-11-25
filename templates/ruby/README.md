@@ -1,97 +1,84 @@
-# 🎄 Advent of Code - Ruby Day Template
+# Ruby Advent of Code day template
 
-A lightweight, self-contained Ruby template for a single day of Advent of Code.
+A copied day is self-contained. It uses Ruby's standard library and Minitest.
+Rake is an optional convenience for shorter commands; direct Ruby commands are
+available without it. There is no Gemfile or bundle install step.
 
-## 🚀 Quick Start
+## Setup and commands
 
-### Zero Dependencies (Ruby 3.4+)
+Install Ruby with Minitest available. To use the short commands, also install
+Rake if it is not already available (`gem install rake`). Run from the day
+directory:
 
-This template uses only Ruby's standard library - **no `bundle install` needed!**
-
-Rake and Minitest are included in Ruby 2.0+, so you can start immediately:
-
-```bash
-# Run tests
+```sh
+# Run the tests (rake with no task runs the default test task)
 rake
 
-# Run the solution with default input.txt
+# Run with input.txt in this directory
 rake run
 
-# Run with a custom input file
-rake run[my_input.txt]
+# Run with a sample or another input file
+INPUT=samples/part1.txt rake run
 ```
 
-### Optional: Using Additional Gems
+You can also use Ruby directly without Rake:
 
-If you want to use gems like `pry` for debugging, you can add a `Gemfile` (see the optional `Gemfile` in this template). Then:
+```sh
+# Run the tests
+ruby -Itest test/solution_test.rb
 
-```bash
-bundle install
-bundle exec rake run
+# Run with input.txt in this directory
+ruby run.rb
+
+# Run with a sample or another input file
+ruby run.rb samples/part1.txt
 ```
 
-### File Structure
+The runner resolves both the default input path and a relative path argument
+from the day directory. It prints labeled answers and reads `input.txt` by
+default. The personal `input.txt` is ignored by Git; sample fixtures under
+`samples/` are tracked.
+
+## Files
 
 ```text
-day01/
-  ├── solution.rb      # Your solution class (Solution)
-  ├── solution_test.rb # Tests with sample input in heredoc
-  ├── Rakefile         # Simple rake tasks
-  ├── input.txt        # Your puzzle input
-  ├── Gemfile          # Optional: for additional gems
-  └── README.md        # This file
+run.rb                 # Input-file handling and answer output
+Rakefile                # Optional short commands: rake, rake run
+solution.rb            # Puzzle logic
+test/solution_test.rb  # Minitest tests
+samples/                # Trackable sample inputs
+input.txt               # Your personal puzzle input (ignored)
+README.md               # This guide
 ```
 
-## 📝 Usage
+## Solution interface
 
-### 1. Edit `solution.rb`
-
-Implement your `Solution` class with `part1` and `part2` methods:
+Implement puzzle logic as methods on the `Solution` module. Each method takes
+the complete, unmodified input text as a string and returns its answer:
 
 ```ruby
-class Solution
-  def initialize(input_data)
-    @input_data = input_data
-    @lines = input_data.split("\n")
+module Solution
+  def self.part1(input)
+    # Parse and solve Part 1
   end
 
-  def part1
-    # Your Part 1 logic here
-  end
-
-  def part2
-    # Your Part 2 logic here
+  def self.part2(input)
+    # Parse and solve Part 2
   end
 end
 ```
 
-### 2. Update Tests
+The runner owns file I/O and printing; methods in `solution.rb` should not read
+files or print answers. Tests call these methods directly. If a puzzle has no
+Part 2, remove `part2`; the runner prints only the parts the module implements.
 
-Edit `solution_test.rb` to add your test cases. The sample input is already in a heredoc:
+The sample solver and fixtures demonstrate the interface with increasing
+measurements. Replace them with the day's puzzle logic and samples. Each part
+loads its own fixture in the tests, so the samples can differ when needed.
 
-```ruby
-SAMPLE_INPUT = <<~INPUT
-  your
-  test
-  data
-INPUT
-```
+## Ruby version
 
-### 3. Run
-
-```bash
-# Test your solution
-rake
-
-# Run with puzzle input
-rake run
-```
-
-## 🎯 Why This Template?
-
-- **Zero dependencies** - Uses only Ruby stdlib (Rake & Minitest included)
-- **Self-contained** - Everything in one folder, easy to copy/drop
-- **Simple** - No complex autoloading or project structure
-- **Testable** - Includes test setup with sample data
-
-Perfect for giving people a taste of Ruby! 🎉
+This template has no exact Ruby version pin. It was tested with Ruby 4.0.10,
+Minitest 6.0.0, and Rake 13.3.1. Choosing an exact Ruby version or version
+manager for this template remains an open Ruby-specific decision and does not
+settle the repository-wide version-management policy.

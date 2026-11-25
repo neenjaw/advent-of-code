@@ -1,20 +1,16 @@
-class Solution
-  attr_reader :input_data
-
-  def initialize(input_data)
-    @input_data = input_data
-    # Process the input here, e.g., convert to an array of lines or integers
-    @lines = input_data.split("\n")
+module Solution
+  def self.part1(input)
+    measurements = parse(input)
+    measurements.each_cons(2).count { |previous, current| current > previous }
   end
 
-  # Standard AoC methods
-  def part1
-    # Your Part 1 logic here
-    @lines.size # Example: just return the number of lines
+  def self.part2(input)
+    measurements = parse(input)
+    window_sums = measurements.each_cons(3).map(&:sum)
+    window_sums.each_cons(2).count { |previous, current| current > previous }
   end
 
-  def part2
-    # Your Part 2 logic here
-    "Not implemented yet"
+  def self.parse(input)
+    input.lines.map(&:to_i)
   end
 end

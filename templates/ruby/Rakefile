@@ -1,29 +1,17 @@
+# frozen_string_literal: true
+
 require "rake"
-require "minitest/test_task"
+require "rbconfig"
 
-# Simple task to run the solution
-desc "Run the Advent of Code solution"
-task :run, [:input_file] do |t, args|
-  require_relative "solution"
-
-  input_file = args[:input_file] || "input.txt"
-
-  unless File.exist?(input_file)
-    abort "Error: Input file not found at path: #{input_file}"
-  end
-
-  input_data = File.read(input_file)
-  solver = Solution.new(input_data)
-
-  puts "--- Advent of Code Solution ---"
-  puts "Part 1: #{solver.part1}"
-  puts "Part 2: #{solver.part2}"
+desc "Run the Advent of Code solution tests"
+task :test do
+  sh RbConfig.ruby, "-Itest", "test/solution_test.rb", verbose: false
 end
 
-# Minitest Rake Task
-Minitest::TestTask.create(:test) do |t|
-  t.test_globs = ["solution_test.rb"]
+desc "Run the solution (optionally set INPUT=path)"
+task :run do
+  input_path = ENV.fetch("INPUT", "input.txt")
+  sh RbConfig.ruby, "run.rb", input_path, verbose: false
 end
 
-# Make 'test' the default task when running 'rake'
-task :default => :test
+task default: :test
