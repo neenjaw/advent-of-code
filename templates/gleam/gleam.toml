@@ -1,0 +1,11 @@
+name = "aoc_gleam"
+version = "1.0.0"
+gleam = ">= 1.13.0"
+
+[dependencies]
+argv = ">= 1.1.0 and < 2.0.0"
+gleam_stdlib = ">= 0.60.0 and < 2.0.0"
+simplifile = ">= 2.7.0 and < 3.0.0"
+
+[dev_dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
