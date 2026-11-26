@@ -33,11 +33,35 @@ These conventions guide the self-contained day templates:
 
 ## Available templates
 
-Templates are currently available in `templates/` for Clojure, Elixir, Gleam,
-Go, Node.js, PHP, Python, Ruby, and Rust. Swift was part of the original 2026
-language list but does not yet have a template.
+Template directories use the same codes as the language folders created for a
+day:
+
+| Code | Language |
+| --- | --- |
+| `cl` | Clojure |
+| `ex` | Elixir |
+| `gl` | Gleam |
+| `go` | Go |
+| `js` | JavaScript |
+| `php` | PHP |
+| `py` | Python |
+| `rb` | Ruby |
+| `rs` | Rust |
+| `sw` | Swift (template not yet available) |
+
+## Create a day
+
+Use the scaffold script with a year, day number, and template code:
+
+```sh
+python3 scripts/new-day.py 2026 1 rb
+```
+
+This copies `templates/rb/` to `2026/01/rb/`. It refuses to overwrite an
+existing destination and skips personal inputs and generated build/cache
+artifacts.
 
 ## Decisions still to make
 
-- The two-letter language codes and their mapping to language names.
 - The exact version-management policy for the language toolchains.
+- Build the Swift template from the original 2026 language list.
