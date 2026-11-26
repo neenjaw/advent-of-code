@@ -47,7 +47,7 @@ day:
 | `py` | Python |
 | `rb` | Ruby |
 | `rs` | Rust |
-| `sw` | Swift (template not yet available) |
+| `sw` | Swift |
 
 ## Create a day
 
@@ -64,4 +64,3 @@ artifacts.
 ## Decisions still to make
 
 - The exact version-management policy for the language toolchains.
-- Build the Swift template from the original 2026 language list.

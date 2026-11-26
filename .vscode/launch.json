@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:advent-of-code}/templates/sw",
+      "name": "Debug AocDay (templates/sw)",
+      "target": "AocDay",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug AocDay (templates/sw)"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:advent-of-code}/templates/sw",
+      "name": "Release AocDay (templates/sw)",
+      "target": "AocDay",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release AocDay (templates/sw)"
+    }
+  ]
+}
